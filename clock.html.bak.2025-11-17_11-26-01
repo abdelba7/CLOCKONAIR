@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>CLOCK ONAIR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --font-main: -apple-system, BlinkMacSystemFont, system-ui, -system-ui,
+        "Segoe UI", sans-serif;
+
+      /* Dark */
+      --bg-main-dark: radial-gradient(circle at top, #252833 0, #070910 55%, #020308 100%);
+      --bg-onair-dark: radial-gradient(circle at center, #ff5757 0, #990000 45%, #2b0000 100%);
+      --bg-top-dark: radial-gradient(circle at center, #36ff9b 0, #00914d 45%, #013320 100%);
+
+      --text-primary-dark: #f5f5f7;
+      --text-muted-dark: #9c9ca4;
+      --accent-dark: #23d56b;
+      --danger-dark: #ff3b30;
+      --surface-dark: rgba(255, 255, 255, 0.03);
+      --border-subtle-dark: rgba(255, 255, 255, 0.08);
+
+      /* Light */
+      --bg-main-light: radial-gradient(circle at top, #f4f6fb 0, #e4e8f2 55%, #d7ddea 100%);
+      --bg-onair-light: radial-gradient(circle at center, #ffe1e1 0, #f28b8b 45%, #d7ddea 100%);
+      --bg-top-light: radial-gradient(circle at center, #e0ffef 0, #8be4b6 45%, #d7ddea 100%);
+
+      --text-primary-light: #14151a;
+      --text-muted-light: #5f636b;
+      --accent-light: #0ca95b;
+      --danger-light: #c80000;
+      --surface-light: rgba(0, 0, 0, 0.03);
+      --border-subtle-light: rgba(0, 0, 0, 0.08);
+
+      /* NP */
+      --np-green: #23d56b;
+      --np-orange: #ff9f0a;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-main);
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      background: #000;
+      background-image: var(--bg-main-dark);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: #fff;
+      transition: background 180ms ease-out, background-image 180ms ease-out;
+    }
+
+    body.theme-dark {
+      --bg-main: var(--bg-main-dark);
+      --bg-onair: var(--bg-onair-dark);
+      --bg-top: var(--bg-top-dark);
+      --text-primary: var(--text-primary-dark);
+      --text-muted: var(--text-muted-dark);
+      --accent: var(--accent-dark);
+      --danger: var(--danger-dark);
+      --surface: var(--surface-dark);
+      --border-subtle: var(--border-subtle-dark);
+      background-image: var(--bg-main-dark);
+      color: var(--text-primary-dark);
+    }
+
+    body.theme-light {
+      --bg-main: var(--bg-main-light);
+      --bg-onair: var(--bg-onair-light);
+      --bg-top: var(--bg-top-light);
+      --text-primary: var(--text-primary-light);
+      --text-muted: var(--text-muted-light);
+      --accent: var(--accent-light);
+      --danger: var(--danger-light);
+      --surface: var(--surface-light);
+      --border-subtle: var(--border-subtle-light);
+      background-image: var(--bg-main-light);
+      color: var(--text-primary-light);
+    }
+
+    body.status-default { background-image: var(--bg-main); }
+    body.status-onair   { background-image: var(--bg-onair); }
+    body.status-top     { background-image: var(--bg-top); }
+
+    .screen {
+      position: relative;
+      flex: 1;
+      max-width: 1400px;
+      padding: 16px 24px 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      color: var(--text-primary);
+      backdrop-filter: blur(8px);
+      background: radial-gradient(circle at top, rgba(0,0,0,0.45), rgba(0,0,0,0.75));
+      border-radius: 20px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.05),
+        0 18px 50px rgba(0,0,0,0.9);
+      transition: box-shadow 180ms ease-out, border-color 180ms ease-out, background 180ms ease-out;
+    }
+
+    body.status-onair .screen {
+      box-shadow:
+        0 0 0 1px rgba(255,120,120,0.35),
+        0 0 45px rgba(255,80,80,0.7),
+        0 30px 80px rgba(0,0,0,0.95);
+    }
+
+    body.status-top .screen {
+      box-shadow:
+        0 0 0 1px rgba(80,255,170,0.35),
+        0 0 45px rgba(60,255,170,0.7),
+        0 30px 80px rgba(0,0,0,0.95);
+    }
+
+    /* HEADER */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .header-center {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .header-center-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .header-studio-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+    }
+
+    .header-onair-chrono {
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 45%;
+      justify-content: flex-end;
+    }
+
+    .header-last-message {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 220px;
+      cursor: pointer;
+    }
+
+    .btn-logout {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      cursor: pointer;
+      padding: 0;
+      opacity: 0.55;
+      transition: opacity 0.12s ease-out, text-decoration-color 0.12s ease-out;
+    }
+
+    .btn-logout:hover {
+      opacity: 0.85;
+      text-decoration: underline;
+    }
+
+    /* LOGO */
+    .logo-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .logo-svg {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+
+    .logo-svg .logo-s0 { fill: #000000; }
+    .logo-svg .logo-s1 { fill: #0064f5; }
+    .logo-svg .logo-s2 { fill: #001ed2; }
+
+    .logo-svg .logo-text-shape { fill: #000000; }
+    body.theme-dark .logo-svg .logo-text-shape { fill: #ffffff; }
+    body.theme-light .logo-svg .logo-text-shape { fill: #000000; }
+
+    body.status-default .logo-svg .logo-s1 { fill: #0064f5; }
+    body.status-default .logo-svg .logo-s2 { fill: #001ed2; }
+    body.status-onair .logo-svg .logo-s1 { fill: #ff5757; }
+    body.status-onair .logo-svg .logo-s2 { fill: #b00000; }
+    body.status-top .logo-svg .logo-s1 { fill: #36ff9b; }
+    body.status-top .logo-svg .logo-s2 { fill: #019454; }
+
+    .logo-svg .logo-pulse {
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      opacity: 0;
+      transform-origin: 64px 65px;
+      animation: logo-pulse 2.4s ease-out infinite;
+    }
+
+    body.status-default .logo-svg .logo-pulse { stroke: #0064f5; }
+    body.status-onair  .logo-svg .logo-pulse { stroke: #ff5757; }
+    body.status-top    .logo-svg .logo-pulse { stroke: #36ff9b; }
+
+    .logo-svg .logo-disc-group {
+      transform-origin: 64px 65px;
+      animation: logo-breathe 2.8s ease-in-out infinite;
+    }
+
+    @keyframes logo-breathe {
+      0%   { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+      50%  { transform: scale(1.04); filter: drop-shadow(0 0 8px rgba(255,255,255,0.35)); }
+      100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+    }
+
+    @keyframes logo-pulse {
+      0%   { transform: scale(0.7); opacity: 0.8; }
+      60%  { transform: scale(1.4); opacity: 0.1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* BANDEAU DERNIER MESSAGE SOUS LE HEADER */
+    .last-message-row {
+      margin-top: 8px;
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .chat-last-inline-btn {
+      font-size: 0.8rem;
+      color: var(--text-muted-dark);
+      max-width: 100%;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle-dark);
+      background: rgba(0,0,0,0.55);
+      padding: 6px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chat-last-inline-btn span:first-child {
+      opacity: 0.8;
+    }
+
+    /* MAIN AREA */
+    .main-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 6px;
+      padding-bottom: 16px;
+    }
+
+    .central-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 18px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    /* CLOCK */
+    .clock-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .clock {
+      position: relative;
+      width: min(64vh, 420px);
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clock-svg-main {
+      position: absolute;
+      inset: 0;
+    }
+
+    .clock-background-circle {
+      fill: rgba(0, 0, 0, 0.55);
+      stroke: rgba(255, 255, 255, 0.12);
+      stroke-width: 1;
+    }
+
+    .clock-dot {
+      fill: rgba(255,255,255,0.35);
+      filter: drop-shadow(0 0 3px rgba(0,0,0,0.7));
+    }
+
+    .clock-dot.active {
+      fill: var(--accent-dark);
+      filter: drop-shadow(0 0 6px rgba(35,213,107,0.9));
+    }
+
+    .np-ring-base {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.16);
+      stroke-width: 3;
+    }
+
+    .np-ring-progress {
+      fill: none;
+      stroke: var(--accent-dark);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 440;
+      stroke-dashoffset: 440;
+      filter: drop-shadow(0 0 6px rgba(35, 213, 107, 0.8));
+      transition: stroke 120ms ease-out;
+    }
+
+    .clock-core {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      width: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .clock-time {
+      font-size: clamp(2.5rem, 4vw, 3.4rem);
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 2px;
+      color: var(--text-primary-dark);
+    }
+
+    .onair-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--danger-dark);
+      margin-bottom: 2px;
+    }
+
+    .np-phase-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--np-orange);
+      min-height: 1em;
+    }
+
+    .np-chrono-main {
+      font-size: 2.4rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      color: var(--text-primary-dark);
+    }
+
+    /* NOW PLAYING (agrandi) */
+    .now-playing {
+      margin-top: 10px;
+      user-select: none;
+    }
+
+    .now-playing-artist {
+      font-size: 1.35rem;   /* +35% */
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    .now-playing-title {
+      font-size: 1.15rem;   /* +25% */
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--text-muted-dark);
+      margin-bottom: 6px;
+    }
+
+    /* BOUTONS */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      min-width: 120px;
+      padding: 10px 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle-dark);
+      background: rgba(0,0,0,0.6);
+      color: var(--text-primary-dark);
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+      outline: none;
+      transition: transform 0.08s ease-out,
+        box-shadow 0.12s ease-out,
+        background 0.12s ease-out,
+        border-color 0.12s ease-out,
+        filter 0.12s ease-out;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .btn-primary {
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.08),
+        rgba(255, 255, 255, 0.02)
+      );
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    }
+
+    .btn-active {
+      filter: brightness(1.25);
+      box-shadow: 0 0 18px rgba(255,255,255,0.4);
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    /* CHAT MODAL */
+    .chat-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      background: rgba(0,0,0,0.45);
+      z-index: 50;
+    }
+
+    .chat-modal {
+      position: relative;
+      width: 420px;
+      max-width: 90vw;
+      max-height: 80vh;
+      background: rgba(10,10,14,0.98);
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-modal-header {
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      background: radial-gradient(circle at top, rgba(255,255,255,0.08), rgba(0,0,0,0.3));
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .chat-modal-title {
+      flex: 1;
+    }
+
+    .chat-close {
+      border: none;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0 4px;
+    }
+
+    .chat-modal-body {
+      flex: 1;
+      padding: 8px 10px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+    }
+
+    .chat-message {
+      margin-bottom: 6px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .chat-message-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+
+    .chat-message-header time {
+      font-weight: 400;
+      opacity: 0.6;
+      font-size: 0.75rem;
+    }
+
+    .chat-message-text {
+      font-size: 0.8rem;
+    }
+
+    .chat-modal-input {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px 8px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .chat-input {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.6);
+      color: inherit;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .chat-send-btn {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle-dark);
+      background: rgba(0,0,0,0.7);
+      color: var(--text-primary-dark);
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .screen { padding: 12px 12px 18px; }
+      .header-last-message { display: none; }
+      .central-column { max-width: 100%; }
+      .clock { width: min(68vh, 360px); }
+      .controls { gap: 12px; }
+    }
+
+    @media (max-width: 480px) {
+      .app-header { flex-wrap: wrap; row-gap: 6px; }
+      .header-center { order: 3; width: 100%; }
+      .header-right { max-width: 100%; }
+      .clock { width: min(70vh, 310px); }
+      .controls { width: 100%; justify-content: center; }
+      .btn { flex: 1; min-width: 0; }
+    }
+  </style>
+</head>
+<body class="theme-dark status-default">
+  <div class="screen">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-wrapper">
+          <!-- LOGO SANS "Orléans" -->
+          <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 515 130" aria-hidden="true">
+            <g id="ici">
+              <path fill-rule="evenodd" class="logo-s0 logo-text-shape" d="m170.1 0.7v23.8h-26.2v-23.8zm22.5 115.2c-8.7-8.7-13-20.5-13-35.5 0-14.8 4.5-26.6 13.4-35.4 8.9-8.9 20.8-13.3 35.9-13.3 12.6 0 23 3.2 30.9 9.8 7.9 6.5 12.7 15.4 14.6 26.9h-27.1c-2.2-9.7-8.8-15.4-18.8-15.4-6.7 0-12.2 2.6-16.2 7.6-4 5.1-6.1 11.7-6.1 19.8 0 8.1 2.1 14.8 6.1 19.8q1.4 1.8 3.3 3.2 1.8 1.5 3.9 2.5 2.1 1 4.4 1.4 2.3 0.5 4.6 0.5c10.1 0 17-6 18.8-15.7h27.3c-1.9 11.4-6.9 20.4-15 27-8.3 6.6-18.8 9.9-31.6 9.9-15.1 0-26.9-4.3-35.4-13.1zm-48.7-83.1h26.2v95.1h-26.2zm139.2 0h26.2v95.1h-26.2v-95.1zm26.1-32.1v23.8h-26.2v-23.8z"/>
+              <g class="logo-disc-group">
+                <path class="logo-s1" d="m64 129.4c-35.4 0-64-28.7-64-64.3 0-35.5 28.6-64.2 64-64.2 35.4 0 64 28.7 64 64.2 0 35.6-28.6 64.3-64 64.3z"/>
+                <path class="logo-s0" d="m64 65.1v64.3h-64v-64.3z"/>
+                <path fill-rule="evenodd" class="logo-s2" d="m63.9 129.4h0.1v-64.3h-64c0 35.5 28.6 64.2 63.9 64.3z"/>
+              </g>
+              <circle class="logo-pulse" cx="64" cy="65" r="10" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="header-center-inner">
+          <div class="header-studio-label" id="header-studio">STUDIO A</div>
+          <div class="header-onair-chrono" id="onair-chrono-header">00:00</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="header-last-message" id="header-last-message">
+          Dernier message : Go jingle + top dans 10 sec.
+        </div>
+        <button class="btn-logout" id="btn-logout" type="button">
+          Déconnexion
+        </button>
+      </div>
+    </header>
+
+    <!-- BANDEAU DERNIER MESSAGE SOUS LE HEADER -->
+    <div class="last-message-row">
+      <button class="chat-last-inline-btn" id="chat-last-inline" type="button">
+        <span>Dernier message :</span>
+        <span id="chat-last-inline-text">Go jingle + top dans 10 sec.</span>
+      </button>
+    </div>
+
+    <!-- BLOC CENTRAL -->
+    <main class="main-area">
+      <div class="central-column">
+        <div class="clock-container">
+          <div class="clock">
+            <svg class="clock-svg-main" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+              <circle class="clock-background-circle" cx="100" cy="100" r="72" />
+              <g id="dots-layer"></g>
+              <circle class="np-ring-base" cx="100" cy="100" r="70"
+                      transform="rotate(-90 100 100)" />
+              <circle class="np-ring-progress" id="np-ring-progress" cx="100" cy="100" r="70"
+                      transform="rotate(-90 100 100)" />
+            </svg>
+
+            <div class="clock-core">
+              <div class="clock-time" id="clock-time">--:--:--</div>
+              <div class="onair-label" id="onair-label"></div>
+              <div class="np-phase-label" id="np-phase-label"></div>
+              <div class="np-chrono-main" id="np-chrono-main">00:00</div>
+            </div>
+          </div>
+        </div>
+
+        <section class="now-playing">
+          <div class="now-playing-artist" id="np-artist">NOM DE L’ARTISTE</div>
+          <div class="now-playing-title" id="np-title">
+            TITRE EN COURS DE DIFFUSION
+          </div>
+        </section>
+
+        <div class="controls">
+          <button class="btn btn-primary" id="btn-top" type="button">
+            TOP
+          </button>
+          <button class="btn" id="btn-ordres" type="button">
+            ORDRES
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- CHAT MODAL OVERLAY -->
+  <div class="chat-overlay" id="chat-overlay">
+    <div class="chat-modal" id="chat-modal">
+      <div class="chat-modal-header" id="chat-modal-header">
+        <div class="chat-modal-title" id="chat-modal-title">Chat studio</div>
+        <button class="chat-close" id="chat-close" type="button">×</button>
+      </div>
+      <div class="chat-modal-body" id="chat-modal-body"></div>
+      <div class="chat-modal-input">
+        <input
+          type="text"
+          id="chat-input"
+          class="chat-input"
+          placeholder="Votre message…"
+        />
+        <button class="chat-send-btn" id="chat-send" type="button">
+          Envoyer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="top-sound" preload="auto">
+    <source
+      src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAEQAAAB8fHx3d3dwcHBvb29sbGxra2tmZmZkZGRjY2Nra2tsbGxvb29wcHB3d3d8fHx5eXl7e3t5eXl3d3dvb29tbW1tbW1vb29zc3N3d3d7e3t/f3////9/f39/f3t7e3l5eXd3d3FxcW1tbWxsbG1tbXFxcXd3d3l5eXt7e39/f3////9/f3+AgIA="
+      type="audio/wav"
+    />
+  </audio>
+
+  <script>
+    (function () {
+      function byId(id) { return document.getElementById(id); }
+      function pad2(n) { n = Math.floor(n); return (n < 10 ? "0" : "") + n; }
+      function formatMMSS(totalSeconds) {
+        totalSeconds = Math.max(0, Math.floor(totalSeconds));
+        var m = pad2(Math.floor(totalSeconds / 60));
+        var s = pad2(totalSeconds % 60);
+        return m + ":" + s;
+      }
+      function nowHHMM() {
+        var d = new Date();
+        return pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+      }
+
+      window.addEventListener("DOMContentLoaded", function () {
+        var body = document.body;
+        body.classList.add("theme-dark");
+        body.classList.add("status-default");
+
+        // Thème
+        try {
+          var storedTheme = window.localStorage.getItem("clock-theme");
+          if (storedTheme === "light") {
+            body.classList.remove("theme-dark");
+            body.classList.add("theme-light");
+          }
+        } catch (e) {}
+
+        // User / rôle / studio
+        var headerStudio = byId("header-studio");
+        var headerOnAirChrono = byId("onair-chrono-header");
+        var headerLastMessage = byId("header-last-message");
+        var btnLogout = byId("btn-logout");
+
+        var userName = "Moi";
+        var userRole = null;
+        var studio = "A";
+
+        try {
+          var storedName = window.localStorage.getItem("clock-user-name");
+          if (storedName) userName = storedName;
+
+          var storedRole = window.localStorage.getItem("clock-user-role");
+          if (storedRole) userRole = storedRole;
+
+          var storedStudio = window.localStorage.getItem("clock-studio");
+          if (storedStudio) studio = storedStudio.toUpperCase();
+        } catch (e) {}
+
+        var search = window.location.search;
+        if (search && search.length > 1) {
+          var parts = search.substring(1).split("&");
+          for (var i = 0; i < parts.length; i++) {
+            var kv = parts[i].split("=");
+            if (kv[0] === "studio" && kv[1]) {
+              studio = decodeURIComponent(kv[1]).toUpperCase();
+            }
+          }
+        }
+        if (headerStudio) headerStudio.textContent = "STUDIO " + studio;
+
+        // Elements horloge / NP / chat / boutons
+        var clockTimeEl = byId("clock-time");
+        var onairLabelEl = byId("onair-label");
+        var npPhaseLabelEl = byId("np-phase-label");
+        var npChronoMainEl = byId("np-chrono-main");
+        var npRingProgress = byId("np-ring-progress");
+        var dotsLayer = byId("dots-layer");
+
+        var topBtn = byId("btn-top");
+        var ordresBtn = byId("btn-ordres");
+        var topSound = byId("top-sound");
+
+        // Pré-chargement du son TOP pour réduire la latence du premier play()
+        if (topSound) {
+          try {
+            const wakeAudio = () => {
+              topSound.volume = 0;
+              topSound.play().catch(() => {});
+              setTimeout(() => {
+                try {
+                  topSound.pause();
+                  topSound.currentTime = 0;
+                } catch (e) {}
+              }, 50);
+              topSound.volume = 1;
+              window.removeEventListener('click', wakeAudio);
+              window.removeEventListener('touchstart', wakeAudio);
+            };
+            window.addEventListener('click', wakeAudio, { once: true });
+            window.addEventListener('touchstart', wakeAudio, { once: true });
+          } catch (e) {}
+        }
+
+        var chatLastInline = byId("chat-last-inline");
+        var chatLastInlineText = byId("chat-last-inline-text");
+        var chatOverlay = byId("chat-overlay");
+        var chatModal = byId("chat-modal");
+        var chatClose = byId("chat-close");
+        var chatBody = byId("chat-modal-body");
+        var chatInput = byId("chat-input");
+        var chatSend = byId("chat-send");
+
+        /* Points 60s */
+        var DOT_COUNT = 60;
+        var DOT_RADIUS = 1.9;
+        var DOT_RING_RADIUS = 80;
+        var dots = [];
+        if (dotsLayer) {
+          for (var d = 0; d < DOT_COUNT; d++) {
+            var angleRad = (d / DOT_COUNT) * 2 * Math.PI - Math.PI / 2;
+            var x = 100 + DOT_RING_RADIUS * Math.cos(angleRad);
+            var y = 100 + DOT_RING_RADIUS * Math.sin(angleRad);
+            var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            c.setAttribute("class", "clock-dot");
+            c.setAttribute("cx", x.toFixed(2));
+            c.setAttribute("cy", y.toFixed(2));
+            c.setAttribute("r", String(DOT_RADIUS));
+            dotsLayer.appendChild(c);
+            dots.push(c);
+          }
+        }
+
+        /* NTP offset */
+        var clockOffsetMs = 0;
+        fetch("/api/ntp")
+          .then(function (r) { return r.json(); })
+          .then(function (ntp) {
+            if (ntp && typeof ntp.offsetMs === "number") {
+              clockOffsetMs = ntp.offsetMs;
+            }
+          })
+          .catch(function () {});
+
+        /* NOW PLAYING */
+        var npArtistEl = byId("np-artist");
+        var npTitleEl = byId("np-title");
+
+        function applyNowPlaying(np) {
+          if (!np) return;
+          if (npArtistEl) npArtistEl.textContent = (np.artist || " ");
+          if (npTitleEl) npTitleEl.textContent = (np.title || " ");
+        }
+
+        function fetchNowPlayingOnce() {
+          fetch("/api/nowplaying")
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+              if (res && res.ok && res.nowPlaying) {
+                applyNowPlaying(res.nowPlaying);
+              }
+            })
+            .catch(function () {});
+        }
+
+        fetchNowPlayingOnce();
+        setInterval(fetchNowPlayingOnce, 10000);
+
+        /* Cycle NP local */
+        var trackIntro = 10;
+        var trackMain = 150;
+        var trackOutro = 8;
+        var cycleTotal = trackIntro + trackMain + trackOutro;
+        var cycleStart = Date.now();
+        var npSyncLastSec = null;
+
+        /* ON AIR simulé */
+        var simOnAir = false;
+        var onAirRunning = false;
+        var onAirStart = Date.now();
+        var onAirFrozenSec = 0;
+        var topActive = false;
+
+        function updateBackground() {
+          body.classList.remove("status-default", "status-onair", "status-top");
+          if (topActive) {
+            body.classList.add("status-top");
+          } else if (simOnAir) {
+            body.classList.add("status-onair");
+          } else {
+            body.classList.add("status-default");
+          }
+        }
+
+        function setOnAirState(active) {
+          simOnAir = active;
+          if (active) {
+            onAirStart = Date.now();
+            onAirFrozenSec = 0;
+            onAirRunning = true;
+            if (onairLabelEl) onairLabelEl.textContent = "ON AIR";
+            if (ordresBtn) ordresBtn.classList.add("btn-active");
+          } else {
+            if (onAirRunning) {
+              onAirFrozenSec = (Date.now() - onAirStart) / 1000;
+            }
+            onAirRunning = false;
+            if (onairLabelEl) onairLabelEl.textContent = "";
+            if (ordresBtn) ordresBtn.classList.remove("btn-active");
+          }
+          updateBackground();
+        }
+
+        setOnAirState(false);
+
+        /* Horloge + anneau NP */
+        var lastSecond = null;
+
+        function updateClock() {
+          var now = new Date(Date.now() + clockOffsetMs);
+          var sec = now.getSeconds();
+          var hh = pad2(now.getHours());
+          var mm = pad2(now.getMinutes());
+          var ss = pad2(sec);
+
+          if (clockTimeEl) clockTimeEl.textContent = hh + ":" + mm + ":" + ss;
+
+          if (dots.length === DOT_COUNT) {
+            if (sec !== lastSecond) {
+              if (sec === 0) {
+                for (var j = 0; j < dots.length; j++) {
+                  dots[j].classList.remove("active");
+                }
+              }
+              if (dots[sec]) dots[sec].classList.add("active");
+              lastSecond = sec;
+            }
+          }
+
+          var chronoSec;
+          if (onAirRunning) {
+            chronoSec = (Date.now() - onAirStart) / 1000;
+          } else {
+            chronoSec = onAirFrozenSec;
+          }
+          if (headerOnAirChrono) headerOnAirChrono.textContent = formatMMSS(chronoSec);
+
+          if (npSyncLastSec === null) {
+            npSyncLastSec = sec;
+          } else {
+            if (npSyncLastSec === 59 && sec === 0) {
+              cycleStart = Date.now();
+            }
+            npSyncLastSec = sec;
+          }
+
+          var elapsed = (Date.now() - cycleStart) / 1000;
+          var t = elapsed % cycleTotal;
+          var display = "00:00";
+          var ringFraction = 0;
+          var rootStyle = window.getComputedStyle(document.documentElement);
+          var ringColor = "#23d56b";
+          var npTextColor = rootStyle.getPropertyValue("--np-green") || "#23d56b";
+
+          var tIntroEnd = trackIntro;
+          var tMainEnd = tIntroEnd + trackMain;
+
+          if (t < tIntroEnd) {
+            var localIntro = t;
+            var remainIntro = trackIntro - localIntro;
+            display = formatMMSS(remainIntro);
+            ringFraction = localIntro / trackIntro;
+            ringColor = rootStyle.getPropertyValue("--np-orange") || "#ff9f0a";
+            npTextColor = ringColor;
+            if (npPhaseLabelEl) npPhaseLabelEl.textContent = "INTRO";
+          } else if (t < tMainEnd) {
+            var localMain = t - tIntroEnd;
+            var remainMain = trackMain - localMain;
+            display = formatMMSS(remainMain);
+            ringFraction = localMain / trackMain;
+            ringColor = rootStyle.getPropertyValue("--np-green") || "#23d56b";
+            npTextColor = ringColor;
+            if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
+          } else {
+            var localOutro = t - tMainEnd;
+            var remainOutro = trackOutro - localOutro;
+            display = formatMMSS(remainOutro);
+            ringFraction = localOutro / trackOutro;
+            ringColor = rootStyle.getPropertyValue("--np-orange") || "#ff9f0a";
+            npTextColor = ringColor;
+            if (npPhaseLabelEl) npPhaseLabelEl.textContent = "OUTRO";
+          }
+
+          if (npChronoMainEl) {
+            npChronoMainEl.textContent = display;
+            npChronoMainEl.style.color = npTextColor;
+          }
+
+          if (npRingProgress) {
+            if (ringFraction < 0) ringFraction = 0;
+            if (ringFraction > 1) ringFraction = 1;
+            var R = 70;
+            var circumference = 2 * Math.PI * R;
+            var offset = circumference * (1 - ringFraction);
+            npRingProgress.style.strokeDasharray = circumference.toFixed(2);
+            npRingProgress.style.strokeDashoffset = offset.toFixed(2);
+            npRingProgress.style.stroke = ringColor;
+          }
+        }
+
+        function loop() {
+          updateClock();
+          window.requestAnimationFrame(loop);
+        }
+        loop();
+
+        /* TOP avec durée minimale de 200 ms */
+        var topMinimumDuration = 200; // ms
+        var topPressedAt = 0;
+
+        if (topBtn) {
+          function topStart(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            topPressedAt = Date.now();
+            topActive = true;
+            topBtn.classList.add("btn-active");
+            updateBackground();
+            if (topSound && topSound.play) {
+              try {
+                topSound.currentTime = 0;
+                topSound.play();
+              } catch (err) {}
+            }
+          }
+
+          function topEnd(e) {
+            if (!topActive) return;
+            if (e && e.preventDefault) e.preventDefault();
+
+            var elapsed = Date.now() - topPressedAt;
+            var remaining = topMinimumDuration - elapsed;
+
+            if (remaining <= 0) {
+              topActive = false;
+              topBtn.classList.remove("btn-active");
+              updateBackground();
+            } else {
+              setTimeout(function () {
+                topActive = false;
+                topBtn.classList.remove("btn-active");
+                updateBackground();
+              }, remaining);
+            }
+          }
+
+          topBtn.addEventListener("mousedown", topStart, false);
+          topBtn.addEventListener("touchstart", topStart, false);
+          window.addEventListener("mouseup", topEnd, false);
+          window.addEventListener("mouseleave", topEnd, false);
+          window.addEventListener("touchend", topEnd, false);
+          window.addEventListener("touchcancel", topEnd, false);
+        }
+
+        /* ORDRES = toggle ON AIR */
+        if (ordresBtn) {
+          ordresBtn.addEventListener("click", function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+            setOnAirState(!simOnAir);
+          });
+        }
+
+        /* DECONNEXION */
+        if (btnLogout) {
+          btnLogout.addEventListener("click", function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+            window.location.href = "index.html";
+          });
+        }
+
+        /* CHAT / WebSocket */
+        var messages = [];
+        var ws = null;
+
+        function updateLastMessageUI() {
+          var last = messages[messages.length - 1];
+          if (!last) return;
+          var txt = "Dernier message : " + last.text;
+          if (headerLastMessage) headerLastMessage.textContent = txt;
+          if (chatLastInlineText) chatLastInlineText.textContent = last.text;
+        }
+
+        function renderMessages() {
+          if (!chatBody) return;
+          chatBody.innerHTML = "";
+          for (var k = 0; k < messages.length; k++) {
+            var msg = messages[k];
+            var div = document.createElement("div");
+            div.className = "chat-message";
+            var header = document.createElement("div");
+            header.className = "chat-message-header";
+            var spanFrom = document.createElement("span");
+            spanFrom.textContent = msg.user || msg.from || "???";
+            var spanTime = document.createElement("time");
+            spanTime.textContent = msg.time || (msg.ts ? nowHHMM() : "");
+            header.appendChild(spanFrom);
+            header.appendChild(spanTime);
+            var textDiv = document.createElement("div");
+            textDiv.className = "chat-message-text";
+            textDiv.textContent = msg.text;
+            div.appendChild(header);
+            div.appendChild(textDiv);
+            chatBody.appendChild(div);
+          }
+          chatBody.scrollTop = chatBody.scrollHeight;
+          updateLastMessageUI();
+        }
+
+        function openChat() {
+          if (!chatOverlay) return;
+          chatOverlay.style.display = "flex";
+        }
+
+        function closeChat() {
+          if (!chatOverlay) return;
+          chatOverlay.style.display = "none";
+        }
+
+        if (headerLastMessage) {
+          headerLastMessage.addEventListener("click", openChat);
+        }
+
+        if (chatLastInline) {
+          chatLastInline.addEventListener("click", openChat);
+        }
+
+        if (chatOverlay) {
+          chatOverlay.addEventListener("click", function (e) {
+            if (e && e.target === chatOverlay) {
+              closeChat();
+            }
+          });
+        }
+
+        if (chatClose) {
+          chatClose.addEventListener("click", function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+            closeChat();
+          });
+        }
+
+        function addMessageFromBackend(entry) {
+          if (!entry) return;
+          messages.push({
+            user: entry.user || "???",
+            text: entry.text || "",
+            time: entry.ts ? entry.ts.substring(11, 16) : nowHHMM(),
+            ts: entry.ts || null
+          });
+          renderMessages();
+        }
+
+        function initWebSocketChat() {
+          var protocol = window.location.protocol === "https:" ? "wss" : "ws";
+          ws = new WebSocket(protocol + "://" + window.location.host + "/ws");
+
+          ws.addEventListener("open", function () {
+            ws.send(JSON.stringify({
+              type: "hello",
+              role: "chat",
+              user: userName + (userRole ? " (" + userRole + " " + studio + ")" : "")
+            }));
+          });
+
+          ws.addEventListener("message", function (event) {
+            var data;
+            try {
+              data = JSON.parse(event.data);
+            } catch (e) {
+              return;
+            }
+
+            if (data.type === "history" && Array.isArray(data.history)) {
+              messages = data.history.map(function (m) {
+                return {
+                  user: m.user || "???",
+                  text: m.text || "",
+                  time: m.ts ? m.ts.substring(11, 16) : nowHHMM(),
+                  ts: m.ts || null
+                };
+              });
+              renderMessages();
+            }
+
+            if (data.type === "chat" && data.message) {
+              addMessageFromBackend(data.message);
+            }
+
+            if (data.type === "nowPlaying" && data.nowPlaying) {
+              applyNowPlaying(data.nowPlaying);
+            }
+          });
+
+          ws.addEventListener("close", function () {
+            setTimeout(initWebSocketChat, 5000);
+          });
+        }
+
+        function sendMessage() {
+          if (!chatInput) return;
+          var text = chatInput.value || "";
+          text = text.replace(/^\s+|\s+$/g, "");
+          if (!text) return;
+
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "chat", text: text }));
+          } else {
+            messages.push({
+              user: userName,
+              text: text,
+              time: nowHHMM()
+            });
+            renderMessages();
+          }
+
+          chatInput.value = "";
+        }
+
+        if (chatSend) {
+          chatSend.addEventListener("click", function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+            sendMessage();
+          });
+        }
+
+        if (chatInput) {
+          chatInput.addEventListener("keydown", function (e) {
+            e = e || window.event;
+            var code = e.keyCode || e.which;
+            if (code === 13) {
+              if (e.preventDefault) e.preventDefault();
+              sendMessage();
+            }
+          });
+        }
+
+        initWebSocketChat();
+      });
+    })();
+  </script>
+</body>
+</html>

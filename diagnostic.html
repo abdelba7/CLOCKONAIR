@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>CLOCK ONAIR – Diagnostic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050816;
+      --fg: #f5f5f7;
+      --muted: #9ca3be;
+      --accent: #10b981;
+      --accent-soft: rgba(16, 185, 129, 0.15);
+      --danger: #ef4444;
+      --danger-soft: rgba(239, 68, 68, 0.15);
+      --warn: #f59e0b;
+      --warn-soft: rgba(245, 158, 11, 0.15);
+      --border: #1f2937;
+      --surface: rgba(15,23,42,0.96);
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: radial-gradient(circle at top, #1f2937 0, #050816 55%, #020617 100%);
+      color: var(--fg);
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.7);
+      padding: 16px 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(148,163,184,0.25);
+      padding-bottom: 10px;
+    }
+
+    .title-block h1 {
+      margin: 0 0 4px;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .title-block p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--fg);
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .btn:hover { border-color: var(--accent); }
+    .btn-danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 120px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+
+    .pill.ok {
+      border-color: var(--accent-soft);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .pill.warn {
+      border-color: var(--warn-soft);
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .pill.err {
+      border-color: var(--danger-soft);
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .pill span.icon {
+      font-size: 0.9rem;
+    }
+
+    .label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .value {
+      font-size: 0.85rem;
+    }
+
+    .mono {
+      font-family: Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: rgba(15,23,42,0.9);
+      border-radius: 8px;
+      padding: 6px 8px;
+      border: 1px solid rgba(148,163,184,0.2);
+      max-height: 160px;
+      overflow: auto;
+    }
+
+    .ws-log {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .ws-line {
+      font-family: Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.78rem;
+      margin-bottom: 2px;
+    }
+
+    .ws-line span.t {
+      color: #6b7280;
+      margin-right: 6px;
+    }
+
+    .ws-line span.ev-open { color: var(--accent); }
+    .ws-line span.ev-msg { color: #e5e7eb; }
+    .ws-line span.ev-close { color: var(--danger); }
+
+    footer {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .link:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .page { padding: 12px 10px 14px; }
+      header { flex-direction: column; align-items: flex-start; }
+      .controls { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="title-block">
+        <h1>CLOCK ONAIR – Diagnostic</h1>
+        <p>État du backend, NTP, Now Playing et WebSocket.</p>
+      </div>
+      <div class="controls">
+        <button class="btn" id="btn-refresh" type="button">Rafraîchir API</button>
+        <button class="btn" id="btn-ws-connect" type="button">Connecter WS</button>
+        <button class="btn btn-danger" id="btn-ws-disconnect" type="button">Couper WS</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>/api/health</h2>
+        <div class="status-line">
+          <div id="pill-health" class="pill warn"><span class="icon">●</span><span id="pill-health-label">En attente…</span></div>
+        </div>
+        <div class="label">Résumé</div>
+        <div class="value" id="health-summary">–</div>
+        <div class="label">Payload brut</div>
+        <pre class="mono" id="health-raw">–</pre>
+      </article>
+
+      <article class="card">
+        <h2>/api/ntp</h2>
+        <div class="status-line">
+          <div id="pill-ntp" class="pill warn"><span class="icon">●</span><span id="pill-ntp-label">En attente…</span></div>
+        </div>
+        <div class="label">Serveur</div>
+        <div class="value" id="ntp-server">–</div>
+        <div class="label">Offset / Dernier sync</div>
+        <div class="value" id="ntp-offset">–</div>
+        <div class="label">Payload brut</div>
+        <pre class="mono" id="ntp-raw">–</pre>
+      </article>
+
+      <article class="card">
+        <h2>/api/nowplaying</h2>
+        <div class="status-line">
+          <div id="pill-np" class="pill warn"><span class="icon">●</span><span id="pill-np-label">En attente…</span></div>
+        </div>
+        <div class="label">Titre / Artiste</div>
+        <div class="value" id="np-main">–</div>
+        <div class="label">Dernière mise à jour</div>
+        <div class="value" id="np-updated">–</div>
+        <div class="label">Payload brut</div>
+        <pre class="mono" id="np-raw">–</pre>
+      </article>
+
+      <article class="card">
+        <h2>/api/status</h2>
+        <div class="status-line">
+          <div id="pill-status" class="pill warn"><span class="icon">●</span><span id="pill-status-label">En attente…</span></div>
+        </div>
+        <div class="label">Résumé</div>
+        <div class="value" id="status-summary">–</div>
+        <div class="label">Payload brut</div>
+        <pre class="mono" id="status-raw">–</pre>
+      </article>
+
+      <article class="card">
+        <h2>WebSocket /ws (monitoring)</h2>
+        <div class="status-line">
+          <div id="pill-ws" class="pill warn"><span class="icon">●</span><span id="pill-ws-label">Déconnecté</span></div>
+        </div>
+        <div class="label">Dernier événement</div>
+        <div class="value" id="ws-last">–</div>
+        <div class="label">Log</div>
+        <div class="mono ws-log" id="ws-log">–</div>
+      </article>
+    </section>
+
+    <footer>
+      <div>Horloge &amp; chat : <a href="/clock.html" class="link">ouvrir CLOCK ONAIR</a></div>
+      <div id="diag-ts"></div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      function $(id) { return document.getElementById(id); }
+      function setPill(id, mode, label) {
+        var pill = $(id);
+        if (!pill) return;
+        pill.classList.remove("ok","warn","err");
+        pill.classList.add(mode);
+        var span = pill.querySelector("span:nth-child(2)");
+        if (span) span.textContent = label;
+      }
+      function fmtJson(obj) {
+        try { return JSON.stringify(obj, null, 2); }
+        catch (e) { return String(obj); }
+      }
+      function fmtIso(iso) {
+        if (!iso) return "–";
+        try {
+          var d = new Date(iso);
+          if (isNaN(d.getTime())) return iso;
+          return d.toLocaleString();
+        } catch (e) { return iso; }
+      }
+      function updateTs() {
+        var el = $("diag-ts");
+        if (!el) return;
+        var d = new Date();
+        el.textContent = "Dernier rafraîchissement : " +
+          d.toLocaleDateString() + " " + d.toLocaleTimeString();
+      }
+
+      // --- API calls ----------------------------------------------------
+      function checkHealth() {
+        setPill("pill-health","warn","Chargement…");
+        $("health-raw").textContent = "Chargement…";
+        $("health-summary").textContent = "–";
+        return fetch("/api/health")
+          .then(r => r.json())
+          .then(data => {
+            $("health-raw").textContent = fmtJson(data);
+            if (data && data.ok) {
+              setPill("pill-health","ok","OK");
+              $("health-summary").textContent =
+                "Service: " + (data.service || "?") +
+                " • PID: " + (data.pid || "?");
+            } else {
+              setPill("pill-health","warn","ok=false");
+              $("health-summary").textContent = "Réponse inattendue";
+            }
+          })
+          .catch(err => {
+            setPill("pill-health","err","Erreur");
+            $("health-raw").textContent = String(err);
+            $("health-summary").textContent = "Backend injoignable";
+          });
+      }
+
+      function checkNtp() {
+        setPill("pill-ntp","warn","Chargement…");
+        $("ntp-raw").textContent = "Chargement…";
+        $("ntp-server").textContent = "–";
+        $("ntp-offset").textContent = "–";
+        return fetch("/api/ntp")
+          .then(r => r.json())
+          .then(data => {
+            $("ntp-raw").textContent = fmtJson(data);
+            if (!data) {
+              setPill("pill-ntp","warn","Vide");
+              return;
+            }
+            if (data.synced) {
+              setPill("pill-ntp","ok","Synchro OK");
+            } else {
+              setPill("pill-ntp","warn","Non synchro");
+            }
+            $("ntp-server").textContent = data.server || "–";
+            $("ntp-offset").textContent =
+              "Offset: " + (data.offsetMs != null ? data.offsetMs + " ms" : "–") +
+              " • Dernier sync: " + fmtIso(data.lastSync);
+          })
+          .catch(err => {
+            setPill("pill-ntp","err","Erreur");
+            $("ntp-raw").textContent = String(err);
+            $("ntp-server").textContent = "Erreur";
+            $("ntp-offset").textContent = "NTP injoignable";
+          });
+      }
+
+      function checkNowPlaying() {
+        setPill("pill-np","warn","Chargement…");
+        $("np-raw").textContent = "Chargement…";
+        $("np-main").textContent = "–";
+        $("np-updated").textContent = "–";
+        return fetch("/api/nowplaying")
+          .then(r => r.json())
+          .then(data => {
+            $("np-raw").textContent = fmtJson(data);
+            if (!data || !data.ok || !data.nowPlaying) {
+              setPill("pill-np","warn","Aucun titre");
+              $("np-main").textContent = "Aucun now playing reçu";
+              return;
+            }
+            var np = data.nowPlaying;
+            setPill("pill-np","ok","Titre en cours");
+            $("np-main").textContent =
+              (np.title || "Sans titre") + " — " + (np.artist || "Artiste inconnu");
+            $("np-updated").textContent = fmtIso(np.receivedAt);
+          })
+          .catch(err => {
+            setPill("pill-np","err","Erreur");
+            $("np-raw").textContent = String(err);
+            $("np-main").textContent = "Erreur de requête";
+          });
+      }
+
+      function checkStatus() {
+        setPill("pill-status","warn","Chargement…");
+        $("status-raw").textContent = "Chargement…";
+        $("status-summary").textContent = "–";
+        return fetch("/api/status")
+          .then(r => r.json())
+          .then(data => {
+            $("status-raw").textContent = fmtJson(data);
+            if (!data) {
+              setPill("pill-status","warn","Vide");
+              return;
+            }
+            var ntpOk = data.ntp && data.ntp.synced;
+            var npOk = !!data.nowPlaying;
+            var chatUsers = data.chatUsers != null ? data.chatUsers : "?";
+            if (ntpOk && npOk) {
+              setPill("pill-status","ok","OK");
+            } else if (ntpOk || npOk) {
+              setPill("pill-status","warn","Partiel");
+            } else {
+              setPill("pill-status","warn","Minimal");
+            }
+            $("status-summary").textContent =
+              "NTP: " + (ntpOk ? "OK" : "KO") +
+              " • NP: " + (npOk ? "OK" : "KO") +
+              " • Chat users: " + chatUsers;
+          })
+          .catch(err => {
+            setPill("pill-status","err","Erreur");
+            $("status-raw").textContent = String(err);
+            $("status-summary").textContent = "API /api/status injoignable";
+          });
+      }
+
+      function refreshAll() {
+        Promise.all([checkHealth(), checkNtp(), checkNowPlaying(), checkStatus()])
+          .then(updateTs);
+      }
+
+      // --- WebSocket ----------------------------------------------------
+      var ws = null;
+      var wsLogEl = null;
+
+      function logWs(kind, text) {
+        if (!wsLogEl) wsLogEl = $("ws-log");
+        if (!wsLogEl) return;
+        if (wsLogEl.textContent === "–") wsLogEl.textContent = "";
+        var line = document.createElement("div");
+        line.className = "ws-line";
+        var tSpan = document.createElement("span");
+        tSpan.className = "t";
+        var now = new Date();
+        tSpan.textContent = "[" + now.toLocaleTimeString() + "]";
+        var eSpan = document.createElement("span");
+        if (kind === "open") eSpan.className = "ev-open";
+        else if (kind === "close") eSpan.className = "ev-close";
+        else eSpan.className = "ev-msg";
+        eSpan.textContent = text;
+        line.appendChild(tSpan);
+        line.appendChild(eSpan);
+        wsLogEl.appendChild(line);
+        wsLogEl.scrollTop = wsLogEl.scrollHeight;
+        $("ws-last").textContent = text;
+      }
+
+      function connectWs() {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        var proto = window.location.protocol === "https:" ? "wss" : "ws";
+        ws = new WebSocket(proto + "://" + window.location.host + "/ws");
+        setPill("pill-ws","warn","Connexion…");
+
+        ws.addEventListener("open", function () {
+          setPill("pill-ws","ok","Connecté");
+          logWs("open","WS ouvert");
+          ws.send(JSON.stringify({
+            type: "hello",
+            role: "monitoring",
+            user: "diagnostic"
+          }));
+        });
+
+        ws.addEventListener("message", function (ev) {
+          try {
+            var data = JSON.parse(ev.data);
+            logWs("msg","Reçu: " + (data.type || "message") );
+          } catch (e) {
+            logWs("msg","Reçu (texte)");
+          }
+        });
+
+        ws.addEventListener("close", function () {
+          setPill("pill-ws","warn","Déconnecté");
+          logWs("close","WS fermé");
+        });
+
+        ws.addEventListener("error", function () {
+          setPill("pill-ws","err","Erreur");
+          logWs("close","Erreur WS");
+        });
+      }
+
+      function disconnectWs() {
+        if (ws) {
+          try { ws.close(); } catch (e) {}
+        }
+        ws = null;
+      }
+
+      // --- Init ---------------------------------------------------------
+      document.addEventListener("DOMContentLoaded", function () {
+        wsLogEl = $("ws-log");
+        $("btn-refresh").addEventListener("click", refreshAll);
+        $("btn-ws-connect").addEventListener("click", connectWs);
+        $("btn-ws-disconnect").addEventListener("click", disconnectWs);
+        refreshAll();
+      });
+    })();
+  </script>
+</body>
+</html>

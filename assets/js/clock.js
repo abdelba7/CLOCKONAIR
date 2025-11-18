@@ -160,6 +160,15 @@
       if (!np) return;
       if (npArtistEl) npArtistEl.textContent = np.artist || " ";
       if (npTitleEl)  npTitleEl.textContent  = np.title  || " ";
+      
+      // Stocker les infos NP avec timestamp de début
+      currentNP = {
+        artist: np.artist || "",
+        title: np.title || "",
+        durationMs: np.payload && np.payload.durationMs ? np.payload.durationMs : 0,
+        receivedAt: np.receivedAt,
+        startTime: Date.now()
+      };
     }
 
     function fetchNowPlayingOnce() {
@@ -174,7 +183,7 @@
     }
 
     fetchNowPlayingOnce();
-    setInterval(fetchNowPlayingOnce, 10000);
+    setInterval(fetchNowPlayingOnce, 2000);  // Poll toutes les 2s pour réactivité
 
     var topBtn = byId("btn-top");
     var ordresBtn = byId("btn-ordres");
@@ -271,13 +280,8 @@
       })
       .catch(function () {});
 
-    // Cycle NP local (provisoire)
-    var trackIntro = 10;
-    var trackMain  = 150;
-    var trackOutro = 8;
-    var cycleTotal = trackIntro + trackMain + trackOutro;
-    var cycleStart = Date.now();
-    var npSyncLastSec = null;
+    // État NP réel (plus de simulation)
+    var currentNP = null;  // { artist, title, durationMs, receivedAt, startTime }
     var lastSecond = null;
 
     function updateClock() {
@@ -302,48 +306,31 @@
       var chronoSec = onAirRunning ? (Date.now() - onAirStart) / 1000 : onAirFrozenSec;
       if (headerOnAirChrono) headerOnAirChrono.textContent = formatMMSS(chronoSec);
 
-      if (npSyncLastSec === null) {
-        npSyncLastSec = sec;
-      } else {
-        if (npSyncLastSec === 59 && sec === 0) cycleStart = Date.now();
-        npSyncLastSec = sec;
-      }
-
-      var elapsed = (Date.now() - cycleStart) / 1000;
-      var t = elapsed % cycleTotal;
+      // Calcul du NP ring basé sur les vraies données
       var display = "00:00";
       var ringFraction = 0;
-
       var rootStyle = window.getComputedStyle(document.documentElement);
       var ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
       var npTextColor = ringColor;
 
-      var tIntroEnd = trackIntro;
-      var tMainEnd  = tIntroEnd + trackMain;
-
-      if (t < tIntroEnd) {
-        var remainIntro = trackIntro - t;
-        display = formatMMSS(remainIntro);
-        ringFraction = t / trackIntro;
-        ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
-        npTextColor = ringColor;
-        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "INTRO";
-      } else if (t < tMainEnd) {
-        var localMain = t - tIntroEnd;
-        var remainMain = trackMain - localMain;
-        display = formatMMSS(remainMain);
-        ringFraction = localMain / trackMain;
+      if (currentNP && currentNP.durationMs > 0) {
+        var elapsedMs = Date.now() - currentNP.startTime;
+        var elapsedSec = elapsedMs / 1000;
+        var totalSec = currentNP.durationMs / 1000;
+        var remainingSec = Math.max(0, totalSec - elapsedSec);
+        
+        display = formatMMSS(remainingSec);
+        ringFraction = Math.min(1, elapsedSec / totalSec);
+        
+        // Couleur verte pour le NP en cours
         ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
         npTextColor = ringColor;
         if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
       } else {
-        var localOutro = t - tMainEnd;
-        var remainOutro = trackOutro - localOutro;
-        display = formatMMSS(remainOutro);
-        ringFraction = localOutro / trackOutro;
-        ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
-        npTextColor = ringColor;
-        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "OUTRO";
+        // Pas de NP actif
+        display = "00:00";
+        ringFraction = 0;
+        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
       }
 
       if (npChronoMainEl) {

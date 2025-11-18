@@ -167,6 +167,7 @@ body.theme-light .screen {
   align-items: center;
   gap: 12px;
   justify-content: flex-end;
+  margin-top: 8px;
 }
 
 /* LOGO */
@@ -271,7 +272,7 @@ body.theme-light .btn-home {
 
 /* MESSAGE SOUS HEADER */
 .last-message-row {
-  margin-top: auto;
+  margin-top: 20px;
   margin-bottom: auto;
   display: flex;
   justify-content: center;
@@ -280,7 +281,7 @@ body.theme-light .btn-home {
 }
 
 .chat-last-inline-btn {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   max-width: 100%;
   text-overflow: ellipsis;
@@ -289,11 +290,11 @@ body.theme-light .btn-home {
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: rgba(0,0,0,0.55);
-  padding: 6px 14px;
+  padding: 5px 12px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 body.theme-light .chat-last-inline-btn {

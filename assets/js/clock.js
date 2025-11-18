@@ -239,7 +239,8 @@
 
     // Points (60 secondes)
     var DOT_COUNT = 60;
-    var DOT_RADIUS = 2.2;
+    var DOT_RADIUS_MAIN = 2.2;      // multiples de 5 secondes
+    var DOT_RADIUS_SMALL = 1.6;     // autres secondes
     var DOT_RING_RADIUS = 105;
     var dots = [];
     if (dotsLayer) {
@@ -251,7 +252,9 @@
         c.setAttribute("class", "clock-dot");
         c.setAttribute("cx", x.toFixed(2));
         c.setAttribute("cy", y.toFixed(2));
-        c.setAttribute("r", String(DOT_RADIUS));
+        // Rayon plus petit pour les points qui ne sont pas des multiples de 5
+        var radius = (d % 5 === 0) ? DOT_RADIUS_MAIN : DOT_RADIUS_SMALL;
+        c.setAttribute("r", String(radius));
         dotsLayer.appendChild(c);
         dots.push(c);
       }

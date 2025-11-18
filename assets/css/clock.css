@@ -31,7 +31,7 @@
 
 body {
   margin: 0;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   font-family: var(--font-main);
   display: flex;
@@ -82,7 +82,7 @@ body.status-top     { background-image: var(--bg-top); }
   position: relative;
   flex: 1;
   max-width: 1400px;
-  height: 100vh;
+  height: 100dvh;
   padding: 12px 20px 16px;
   box-sizing: border-box;
   display: flex;

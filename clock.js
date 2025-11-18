@@ -160,28 +160,6 @@
       if (!np) return;
       if (npArtistEl) npArtistEl.textContent = np.artist || " ";
       if (npTitleEl)  npTitleEl.textContent  = np.title  || " ";
-      
-      var isUpdate = np.payload && np.payload.isUpdate === true;
-      var remainingMs = np.payload && np.payload.remainingMs ? np.payload.remainingMs : 0;
-      var durationMs = np.payload && np.payload.durationMs ? np.payload.durationMs : 0;
-      
-      // Si c'est une mise à jour, garder la durée initiale mais mettre à jour le temps restant
-      if (isUpdate && currentNP && currentNP.title === np.title && currentNP.artist === np.artist) {
-        // Mise à jour du temps restant en temps réel depuis TopStudio
-        currentNP.remainingMs = remainingMs;
-        currentNP.lastUpdate = Date.now();
-      } else {
-        // Nouveau titre
-        currentNP = {
-          artist: np.artist || "",
-          title: np.title || "",
-          durationMs: durationMs,
-          remainingMs: remainingMs || durationMs,
-          receivedAt: np.receivedAt,
-          startTime: Date.now(),
-          lastUpdate: Date.now()
-        };
-      }
     }
 
     function fetchNowPlayingOnce() {
@@ -196,7 +174,7 @@
     }
 
     fetchNowPlayingOnce();
-    setInterval(fetchNowPlayingOnce, 2000);  // Poll toutes les 2s pour réactivité
+    setInterval(fetchNowPlayingOnce, 10000);
 
     var topBtn = byId("btn-top");
     var ordresBtn = byId("btn-ordres");
@@ -261,8 +239,7 @@
 
     // Points (60 secondes)
     var DOT_COUNT = 60;
-    var DOT_RADIUS_MAIN = 2.2;      // multiples de 5 secondes
-    var DOT_RADIUS_SMALL = 1.6;     // autres secondes
+    var DOT_RADIUS = 2.2;
     var DOT_RING_RADIUS = 105;
     var dots = [];
     if (dotsLayer) {
@@ -274,9 +251,7 @@
         c.setAttribute("class", "clock-dot");
         c.setAttribute("cx", x.toFixed(2));
         c.setAttribute("cy", y.toFixed(2));
-        // Rayon plus petit pour les points qui ne sont pas des multiples de 5
-        var radius = (d % 5 === 0) ? DOT_RADIUS_MAIN : DOT_RADIUS_SMALL;
-        c.setAttribute("r", String(radius));
+        c.setAttribute("r", String(DOT_RADIUS));
         dotsLayer.appendChild(c);
         dots.push(c);
       }
@@ -293,8 +268,13 @@
       })
       .catch(function () {});
 
-    // État NP réel (plus de simulation)
-    var currentNP = null;  // { artist, title, durationMs, receivedAt, startTime }
+    // Cycle NP local (provisoire)
+    var trackIntro = 10;
+    var trackMain  = 150;
+    var trackOutro = 8;
+    var cycleTotal = trackIntro + trackMain + trackOutro;
+    var cycleStart = Date.now();
+    var npSyncLastSec = null;
     var lastSecond = null;
 
     function updateClock() {
@@ -319,32 +299,48 @@
       var chronoSec = onAirRunning ? (Date.now() - onAirStart) / 1000 : onAirFrozenSec;
       if (headerOnAirChrono) headerOnAirChrono.textContent = formatMMSS(chronoSec);
 
-      // Calcul du NP ring basé sur remainingMs de TopStudio
+      if (npSyncLastSec === null) {
+        npSyncLastSec = sec;
+      } else {
+        if (npSyncLastSec === 59 && sec === 0) cycleStart = Date.now();
+        npSyncLastSec = sec;
+      }
+
+      var elapsed = (Date.now() - cycleStart) / 1000;
+      var t = elapsed % cycleTotal;
       var display = "00:00";
       var ringFraction = 0;
+
       var rootStyle = window.getComputedStyle(document.documentElement);
       var ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
       var npTextColor = ringColor;
 
-      if (currentNP && currentNP.durationMs > 0) {
-        // Utiliser remainingMs mis à jour par TopStudio si disponible
-        var timeSinceUpdate = Date.now() - currentNP.lastUpdate;
-        var remainingSec = Math.max(0, (currentNP.remainingMs - timeSinceUpdate) / 1000);
-        var totalSec = currentNP.durationMs / 1000;
-        var elapsedSec = totalSec - remainingSec;
-        
-        display = formatMMSS(remainingSec);
-        ringFraction = Math.min(1, elapsedSec / totalSec);
-        
-        // Couleur verte pour le NP en cours
+      var tIntroEnd = trackIntro;
+      var tMainEnd  = tIntroEnd + trackMain;
+
+      if (t < tIntroEnd) {
+        var remainIntro = trackIntro - t;
+        display = formatMMSS(remainIntro);
+        ringFraction = t / trackIntro;
+        ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
+        npTextColor = ringColor;
+        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "INTRO";
+      } else if (t < tMainEnd) {
+        var localMain = t - tIntroEnd;
+        var remainMain = trackMain - localMain;
+        display = formatMMSS(remainMain);
+        ringFraction = localMain / trackMain;
         ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
         npTextColor = ringColor;
         if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
       } else {
-        // Pas de NP actif
-        display = "00:00";
-        ringFraction = 0;
-        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
+        var localOutro = t - tMainEnd;
+        var remainOutro = trackOutro - localOutro;
+        display = formatMMSS(remainOutro);
+        ringFraction = localOutro / trackOutro;
+        ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
+        npTextColor = ringColor;
+        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "OUTRO";
       }
 
       if (npChronoMainEl) {

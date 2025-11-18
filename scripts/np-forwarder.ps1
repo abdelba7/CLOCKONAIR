@@ -72,9 +72,9 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
     Write-Host "  Artiste    : $Artist" -ForegroundColor Green
     Write-Host "  Durée (ms) : $DurationMs" -ForegroundColor Green
 
-    # Ignorer les lignes vides ou avec durée 0
-    if ([string]::IsNullOrWhiteSpace($Title) -or [string]::IsNullOrWhiteSpace($Artist) -or $DurationMs -eq 0) {
-        Write-Host "  → Ignoré (titre/artiste vide ou durée = 0)" -ForegroundColor Yellow
+    # Ignorer uniquement les lignes complètement vides
+    if ([string]::IsNullOrWhiteSpace($Title) -and [string]::IsNullOrWhiteSpace($Artist)) {
+        Write-Host "  → Ignoré (titre et artiste vides)" -ForegroundColor Yellow
         Write-Host ""
         return
     }
@@ -82,24 +82,27 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
     # Créer une clé unique pour ce NP
     $npKey = "$Station|$Title|$Artist"
     
-    # Vérifier si c'est le même NP que le dernier envoyé
+    # Déterminer si c'est un nouveau titre ou une mise à jour
+    $isNewTrack = $true
+    $updateType = "NOUVEAU"
+    
     if ($lastNP.ContainsKey($npKey)) {
-        $timeDiff = (Get-Date) - $lastNP[$npKey]
-        # Si moins de 10 secondes, c'est probablement une mise à jour du même titre
-        if ($timeDiff.TotalSeconds -lt 10) {
-            Write-Host "  → Ignoré (même NP envoyé il y a $([int]$timeDiff.TotalSeconds)s)" -ForegroundColor Yellow
-            Write-Host ""
-            return
-        }
+        $isNewTrack = $false
+        $updateType = "MAJ durée"
     }
+    
+    Write-Host "  Type       : $updateType" -ForegroundColor $(if ($isNewTrack) { "Cyan" } else { "Yellow" })
 
-    # Payload JSON optimisé (uniquement les infos nécessaires)
+    # Payload JSON avec indication de mise à jour
     $payload = @{
-        station    = $Station
-        title      = $Title
-        artist     = $Artist
-        durationMs = $DurationMs
-        source     = "TopStudioNowPlaying"
+        station       = $Station
+        title         = $Title
+        artist        = $Artist
+        durationMs    = $DurationMs
+        remainingMs   = $DurationMs
+        isUpdate      = !$isNewTrack
+        source        = "TopStudioNowPlaying"
+        timestamp     = (Get-Date).ToString("o")
     } | ConvertTo-Json -Depth 2 -Compress
 
     Write-Host "  JSON : $payload" -ForegroundColor Gray
@@ -117,8 +120,13 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
             Write-Host "  → Réponse : $($response | ConvertTo-Json -Compress)" -ForegroundColor Gray
         }
         
-        # Mémoriser ce NP pour éviter les doublons
+        # Mémoriser ce NP (mais on envoie quand même les mises à jour suivantes)
         $lastNP[$npKey] = Get-Date
+        
+        # Si la durée est 0, le titre a été arrêté
+        if ($DurationMs -eq 0) {
+            Write-Host "  ⚠ Titre arrêté (durée = 0)" -ForegroundColor Yellow
+        }
     }
     catch {
         Write-Host "  → ERREUR envoi API" -ForegroundColor Red

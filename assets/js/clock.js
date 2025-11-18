@@ -239,8 +239,8 @@
 
     // Points (60 secondes)
     var DOT_COUNT = 60;
-    var DOT_RADIUS = 1.9;
-    var DOT_RING_RADIUS = 100;
+    var DOT_RADIUS = 2.2;
+    var DOT_RING_RADIUS = 105;
     var dots = [];
     if (dotsLayer) {
       for (var d = 0; d < DOT_COUNT; d++) {

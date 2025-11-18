@@ -124,6 +124,7 @@ body.theme-light .screen {
   gap: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.14);
+  overflow: visible;
 }
 
 .header-left {
@@ -131,6 +132,8 @@ body.theme-light .screen {
   align-items: center;
   gap: 8px;
   white-space: nowrap;
+  overflow: visible;
+  padding: 4px;
 }
 
 .header-center {
@@ -168,6 +171,7 @@ body.theme-light .screen {
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow: visible;
 }
 
 .logo-svg {

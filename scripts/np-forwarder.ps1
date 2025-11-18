@@ -31,6 +31,7 @@ Write-Host "DEBUG: Le script va afficher TOUTES les lignes reçues pour diagnost
 Write-Host ""
 
 $lineCount = 0
+$lastNP = @{}  # Stocker le dernier NP envoyé pour éviter les doublons
 
 # Lecture "en streaming" du fichier de log
 Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
@@ -71,6 +72,27 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
     Write-Host "  Artiste    : $Artist" -ForegroundColor Green
     Write-Host "  Durée (ms) : $DurationMs" -ForegroundColor Green
 
+    # Ignorer les lignes vides ou avec durée 0
+    if ([string]::IsNullOrWhiteSpace($Title) -or [string]::IsNullOrWhiteSpace($Artist) -or $DurationMs -eq 0) {
+        Write-Host "  → Ignoré (titre/artiste vide ou durée = 0)" -ForegroundColor Yellow
+        Write-Host ""
+        return
+    }
+
+    # Créer une clé unique pour ce NP
+    $npKey = "$Station|$Title|$Artist"
+    
+    # Vérifier si c'est le même NP que le dernier envoyé
+    if ($lastNP.ContainsKey($npKey)) {
+        $timeDiff = (Get-Date) - $lastNP[$npKey]
+        # Si moins de 10 secondes, c'est probablement une mise à jour du même titre
+        if ($timeDiff.TotalSeconds -lt 10) {
+            Write-Host "  → Ignoré (même NP envoyé il y a $([int]$timeDiff.TotalSeconds)s)" -ForegroundColor Yellow
+            Write-Host ""
+            return
+        }
+    }
+
     # Payload JSON optimisé (uniquement les infos nécessaires)
     $payload = @{
         station    = $Station
@@ -94,6 +116,9 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
         if ($response) {
             Write-Host "  → Réponse : $($response | ConvertTo-Json -Compress)" -ForegroundColor Gray
         }
+        
+        # Mémoriser ce NP pour éviter les doublons
+        $lastNP[$npKey] = Get-Date
     }
     catch {
         Write-Host "  → ERREUR envoi API" -ForegroundColor Red

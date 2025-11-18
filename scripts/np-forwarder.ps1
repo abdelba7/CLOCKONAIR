@@ -27,14 +27,30 @@ $pattern = '^\[(.+?)\]\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}\s+>\s+Now Playi
 Write-Host "Monitoring du fichier..." -ForegroundColor Green
 Write-Host "En attente de nouvelles lignes 'Now Playing'..." -ForegroundColor Yellow
 Write-Host ""
+Write-Host "DEBUG: Le script va afficher TOUTES les lignes reçues pour diagnostic..." -ForegroundColor Magenta
+Write-Host ""
+
+$lineCount = 0
 
 # Lecture "en streaming" du fichier de log
 Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
+    $lineCount++
     $line = $_.Trim()
-    if ([string]::IsNullOrWhiteSpace($line)) { return }
+    
+    # DEBUG: Afficher toutes les lignes (même vides) pour diagnostic
+    Write-Host "[Ligne $lineCount] " -NoNewline -ForegroundColor DarkGray
+    if ([string]::IsNullOrWhiteSpace($line)) {
+        Write-Host "(vide)" -ForegroundColor DarkGray
+        return
+    } else {
+        Write-Host "$line" -ForegroundColor DarkGray
+    }
 
     # On ne traite que les lignes "Now Playing"
-    if ($line -notmatch "Now Playing") { return }
+    if ($line -notmatch "Now Playing") { 
+        Write-Host "  → Pas de 'Now Playing' dans cette ligne" -ForegroundColor DarkGray
+        return 
+    }
 
     Write-Host "================================================" -ForegroundColor Cyan
     Write-Host "Ligne détectée : $line" -ForegroundColor White

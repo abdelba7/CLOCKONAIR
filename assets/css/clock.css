@@ -31,7 +31,8 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   font-family: var(--font-main);
   display: flex;
   justify-content: center;
@@ -81,7 +82,8 @@ body.status-top     { background-image: var(--bg-top); }
   position: relative;
   flex: 1;
   max-width: 1400px;
-  padding: 16px 24px 24px;
+  height: 100vh;
+  padding: 12px 20px 16px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -93,6 +95,7 @@ body.status-top     { background-image: var(--bg-top); }
     0 0 0 1px rgba(255,255,255,0.05),
     0 18px 50px rgba(0,0,0,0.9);
   transition: box-shadow 180ms ease-out, border-color 180ms ease-out, background 180ms ease-out;
+  overflow: hidden;
 }
 
 body.status-onair .screen {
@@ -268,8 +271,8 @@ body.theme-light .btn-home {
 
 /* MESSAGE SOUS HEADER */
 .last-message-row {
-  margin-top: 16px;
-  margin-bottom: 4px;
+  margin-top: 8px;
+  margin-bottom: 2px;
   display: flex;
   justify-content: center;
 }
@@ -306,8 +309,10 @@ body.theme-light .chat-last-inline-btn {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 6px;
-  padding-bottom: 16px;
+  padding-top: 4px;
+  padding-bottom: 8px;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .central-column {
@@ -315,9 +320,11 @@ body.theme-light .chat-last-inline-btn {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 18px;
+  gap: 12px;
   width: 100%;
-  max-width: 520px;
+  max-width: 650px;
+  height: 100%;
+  justify-content: center;
 }
 
 /* CLOCK */
@@ -329,7 +336,8 @@ body.theme-light .chat-last-inline-btn {
 
 .clock {
   position: relative;
-  width: min(64vh, 420px);
+  width: min(70vh, 550px);
+  max-width: 90vw;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;

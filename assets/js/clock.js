@@ -240,7 +240,7 @@
     // Points (60 secondes)
     var DOT_COUNT = 60;
     var DOT_RADIUS = 1.9;
-    var DOT_RING_RADIUS = 80;
+    var DOT_RING_RADIUS = 100;
     var dots = [];
     if (dotsLayer) {
       for (var d = 0; d < DOT_COUNT; d++) {
@@ -351,7 +351,7 @@
       if (npRingProgress) {
         if (ringFraction < 0) ringFraction = 0;
         if (ringFraction > 1) ringFraction = 1;
-        var R = 70;
+        var R = 90;
         var circumference = 2 * Math.PI * R;
         var offset = circumference * (1 - ringFraction);
         npRingProgress.style.strokeDasharray = circumference.toFixed(2);

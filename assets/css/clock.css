@@ -271,10 +271,12 @@ body.theme-light .btn-home {
 
 /* MESSAGE SOUS HEADER */
 .last-message-row {
-  margin-top: 8px;
-  margin-bottom: 2px;
+  margin-top: auto;
+  margin-bottom: auto;
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
 .chat-last-inline-btn {
@@ -404,7 +406,7 @@ body.theme-light .clock-background-circle {
 }
 
 .clock-time {
-  font-size: clamp(2.5rem, 4vw, 3.4rem);
+  font-size: clamp(3.5rem, 6vw, 5rem);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
   margin-bottom: 2px;

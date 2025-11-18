@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -9,31 +10,42 @@
         "Segoe UI", sans-serif;
 
       /* Dark */
-      --bg-main-dark: radial-gradient(circle at top, #252833 0, #070910 55%, #020308 100%);
+      --bg-main-dark: radial-gradient(circle at top, #404e83 0, #102467 55%, #020308 100%);
       --text-primary-dark: #f5f5f7;
       --text-muted-dark: #9c9ca4;
       --accent-dark: #23d56b;
-      --border-subtle-dark: rgba(255,255,255,0.08);
+      --border-subtle-dark: rgba(255,255,255,0.16);
 
       /* Light */
-      --bg-main-light: radial-gradient(circle at top, #f4f6fb 0, #e4e8f2 55%, #d7ddea 100%);
-      --text-primary-light: #14151a;
-      --text-muted-light: #5f636b;
-      --accent-light: #0ca95b;
-      --border-subtle-light: rgba(0,0,0,0.12);
+      --bg-main-light: radial-gradient(circle at top, #f2f4ff 0, #d8def7 40%, #b5c1f0 70%, #727bb1 100%);
+      --text-primary-light: #15151e;
+      --text-muted-light: #555770;
+      --accent-light: #007b55;
+      --border-subtle-light: rgba(0,0,0,0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
     }
 
     body {
       margin: 0;
-      min-height: 100vh;
       font-family: var(--font-main);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      -webkit-font-smoothing: antialiased;
+      background-color: #020308;
       background-image: var(--bg-main-dark);
-      background-size: cover;
-      background-position: center;
       color: var(--text-primary-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
       transition: background-image 180ms ease-out, color 180ms ease-out;
     }
 
@@ -61,20 +73,22 @@
       width: min(520px, 96vw);
       padding: 20px 22px 18px;
       box-sizing: border-box;
-      background: radial-gradient(circle at top, rgba(0,0,0,0.55), rgba(0,0,0,0.85));
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(8px);
+      background: radial-gradient(circle at top, rgba(0,0,0,0.45), rgba(0,0,0,0.80));
       border-radius: 20px;
       box-shadow:
         0 0 0 1px rgba(255,255,255,0.06),
         0 18px 45px rgba(0,0,0,0.9);
-      color: #f5f5f7;
+      color: var(--text-primary);
     }
 
     body.theme-light .screen {
-      background: radial-gradient(circle at top, rgba(255,255,255,0.98), rgba(236,240,248,0.98));
-      color: var(--text-primary);
+      background: radial-gradient(circle at top, rgba(255,255,255,0.90), rgba(232,236,252,1));
       box-shadow:
-        0 0 0 1px rgba(0,0,0,0.06),
-        0 14px 32px rgba(0,0,0,0.18);
+        0 0 0 1px rgba(0,0,0,0.05),
+        0 18px 30px rgba(0,0,0,0.10);
     }
 
     .header {
@@ -91,33 +105,29 @@
       gap: 8px;
     }
 
-    .logo-svg {
-      height: 32px;
-      width: auto;
-      display: block;
-    }
+/* === LOGO CLOCK ONAIR (sans Orléans) =============================== */
 
-    .logo-svg .logo-s0 { fill: #000000; }
-    .logo-svg .logo-s1 { fill: #0064f5; }
-    .logo-svg .logo-s2 { fill: #001ed2; }
-    .logo-svg .logo-text-shape { fill: #ffffff; }
-    body.theme-light .logo-svg .logo-text-shape { fill: #000000; }
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-    body.theme-dark .logo-svg .logo-s1 { fill: #0064f5; }
-    body.theme-dark .logo-svg .logo-s2 { fill: #001ed2; }
-    body.theme-light .logo-svg .logo-s1 { fill: #36ff9b; }
-    body.theme-light .logo-svg .logo-s2 { fill: #019454; }
+.logo-svg {
+  height: 34px;
+  width: auto;
+  display: block;
+}
 
-    .logo-svg .logo-disc-group {
-      transform-origin: 64px 65px;
-      animation: logo-breathe 2.8s ease-in-out infinite;
-    }
+/* Disque ICI */
+.logo-svg .logo-s0 { fill: #000000; }
+.logo-svg .logo-s1 { fill: #0064f5; }
+.logo-svg .logo-s2 { fill: #001ed2; }
 
-    @keyframes logo-breathe {
-      0%   { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
-      50%  { transform: scale(1.04); filter: drop-shadow(0 0 8px rgba(255,255,255,0.35)); }
-      100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
-    }
+/* Texte "ici" et "CLOCK ONAIR" */
+.logo-svg .logo-text-shape { fill: #000000; }
+body.theme-dark .logo-svg .logo-text-shape { fill: #ffffff; }
+body.theme-light .logo-svg .logo-text-shape { fill: #000000; }
 
     .title-block {
       display: flex;
@@ -149,155 +159,158 @@
       color: var(--text-muted);
       cursor: pointer;
       gap: 4px;
+      white-space: nowrap;
     }
 
     body.theme-light .theme-toggle {
-      background: rgba(255,255,255,0.92);
-      border-color: rgba(0,0,0,0.12);
-      color: var(--text-muted);
+      background: rgba(255,255,255,0.8);
     }
 
-    .theme-toggle span {
+    .theme-toggle span:first-child {
       font-size: 0.9rem;
     }
 
     .content {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      margin-top: 4px;
-    }
-
-    .section-title {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: var(--text-muted);
-      margin-bottom: 4px;
+      gap: 18px;
+      padding-top: 4px;
     }
 
     .field-group {
-      margin-bottom: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .label {
-      display: block;
       font-size: 0.78rem;
-      margin-bottom: 4px;
-      color: var(--text-muted);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
+      color: var(--text-muted);
     }
 
     .input-text {
+      margin-top: 4px;
       width: 100%;
-      border-radius: 999px;
-      border: 1px solid var(--border-subtle);
-      background: rgba(0,0,0,0.5);
-      color: inherit;
-      padding: 7px 12px;
+      font: inherit;
       font-size: 0.9rem;
+      padding: 9px 11px;
+      border-radius: 9px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(0,0,0,0.45);
+      color: var(--text-primary);
       outline: none;
-      box-sizing: border-box;
+      transition: border-color 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out;
     }
 
     body.theme-light .input-text {
-      background: rgba(255,255,255,0.95);
-      border-color: rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.92);
+    }
+
+    .input-text::placeholder {
+      color: rgba(200,200,205,0.7);
+    }
+
+    body.theme-light .input-text::placeholder {
+      color: rgba(90,90,110,0.8);
+    }
+
+    .input-text:focus {
+      border-color: rgba(35,213,107,0.9);
+      box-shadow: 0 0 0 1px rgba(35,213,107,0.35);
+    }
+
+    .small-hint {
+      margin-top: 3px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 7px;
     }
 
     .roles-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0,1fr));
       gap: 8px;
     }
 
     .role-btn {
       border-radius: 12px;
       border: 1px solid var(--border-subtle);
-      background: rgba(0,0,0,0.5);
-      color: inherit;
-      font-size: 0.82rem;
-      padding: 8px 10px;
-      text-align: left;
+      background: rgba(0,0,0,0.4);
+      color: var(--text-primary);
+      padding: 12px 11px;
+      text-align: center;
       cursor: pointer;
       display: flex;
-      flex-direction: column;
-      gap: 2px;
-      transition: background 120ms ease-out, border-color 120ms ease-out, transform 80ms ease-out;
-    }
-
-    .role-btn span:first-child {
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 0.75rem;
-    }
-
-    .role-btn span:last-child {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-    }
-
-    .role-btn.role-active {
-      border-color: var(--accent);
-      background: rgba(0,0,0,0.8);
-      transform: translateY(-1px);
+      align-items: center;
+      justify-content: center;
+      font-size: 0.86rem;
+      font-weight: 500;
+      transition: border-color 120ms ease-out, background 120ms ease-out, transform 80ms ease-out, box-shadow 120ms ease-out;
     }
 
     body.theme-light .role-btn {
-      background: rgba(255,255,255,0.96);
-      border-color: rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.95);
     }
 
-    body.theme-light .role-btn.role-active {
-      background: #ffffff;
-      border-color: var(--accent);
+    .role-btn:hover {
+      border-color: rgba(255,255,255,0.45);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+      transform: translateY(-1px);
+    }
+
+    .role-btn.role-active {
+      border-color: rgba(35,213,107,0.9);
+      box-shadow:
+        0 0 0 1px rgba(35,213,107,0.75),
+        0 0 20px rgba(35,213,107,0.45);
+      background: linear-gradient(
+        to bottom,
+        rgba(35,213,107,0.15),
+        rgba(35,213,107,0.04)
+      );
     }
 
     .studio-switch {
       display: inline-flex;
+      padding: 3px;
       border-radius: 999px;
       border: 1px solid var(--border-subtle);
-      overflow: hidden;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.4);
+      font-size: 0.8rem;
     }
 
     body.theme-light .studio-switch {
       background: rgba(255,255,255,0.96);
-      border-color: rgba(0,0,0,0.12);
     }
 
     .studio-option {
-      padding: 6px 18px;
-      font-size: 0.82rem;
+      padding: 5px 16px;
+      border-radius: 999px;
       cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
       color: var(--text-muted);
-      border-right: 1px solid transparent;
-      user-select: none;
-    }
-
-    .studio-option:last-child {
-      border-right: none;
+      transition: background 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out;
     }
 
     .studio-option.studio-active {
-      background: rgba(0,0,0,0.85);
+      background: rgba(35,213,107,0.12);
       color: var(--accent);
-    }
-
-    body.theme-light .studio-option.studio-active {
-      background: #ffffff;
-      color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(35,213,107,0.55);
     }
 
     .footer-actions {
-      margin-top: 10px;
       display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 10px;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px;
     }
 
     .error-msg {
@@ -329,24 +342,19 @@
         rgba(255,255,255,1),
         rgba(238,241,252,1)
       );
-      border-color: rgba(0,0,0,0.12);
-      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary:hover {
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.55),
+        0 14px 30px rgba(0,0,0,0.85);
     }
 
     .btn-primary:active {
-      transform: translateY(1px) scale(0.99);
-    }
-
-    .small-hint {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    @media (max-width: 480px) {
-      .screen { padding: 16px 14px 14px; }
-      .roles-grid { grid-template-columns: 1fr; }
-      .footer-actions { justify-content: space-between; }
+      transform: translateY(1px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.55),
+        0 8px 18px rgba(0,0,0,0.85);
     }
   </style>
 </head>
@@ -355,18 +363,18 @@
     <header class="header">
       <div class="logo-wrapper">
         <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 515 130" aria-hidden="true">
-          <g id="ici">
-            <path fill-rule="evenodd" class="logo-s0 logo-text-shape" d="m170.1 0.7v23.8h-26.2v-23.8zm22.5 115.2c-8.7-8.7-13-20.5-13-35.5 0-14.8 4.5-26.6 13.4-35.4 8.9-8.9 20.8-13.3 35.9-13.3 12.6 0 23 3.2 30.9 9.8 7.9 6.5 12.7 15.4 14.6 26.9h-27.1c-2.2-9.7-8.8-15.4-18.8-15.4-6.7 0-12.2 2.6-16.2 7.6-4 5.1-6.1 11.7-6.1 19.8 0 8.1 2.1 14.8 6.1 19.8q1.4 1.8 3.3 3.2 1.8 1.5 3.9 2.5 2.1 1 4.4 1.4 2.3 0.5 4.6 0.5c10.1 0 17-6 18.8-15.7h27.3c-1.9 11.4-6.9 20.4-15 27-8.3 6.6-18.8 9.9-31.6 9.9-15.1 0-26.9-4.3-35.4-13.1zm-48.7-83.1h26.2v95.1h-26.2zm139.2 0h26.2v95.1h-26.2v-95.1zm26.1-32.1v23.8h-26.2v-23.8z"/>
-            <g class="logo-disc-group">
-              <path class="logo-s1" d="m64 129.4c-35.4 0-64-28.7-64-64.3 0-35.5 28.6-64.2 64-64.2 35.4 0 64 28.7 64 64.2 0 35.6-28.6 64.3-64 64.3z"/>
-              <path class="logo-s0" d="m64 65.1v64.3h-64v-64.3z"/>
-              <path fill-rule="evenodd" class="logo-s2" d="m63.9 129.4h0.1v-64.3h-64c0 35.5 28.6 64.2 63.9 64.3z"/>
+            <g id="ici">
+              <path fill-rule="evenodd" class="logo-s0 logo-text-shape" d="m170.1 0.7v23.8h-26.2v-23.8zm22.5 115.2c-8.7-8.7-13-20.5-13-35.5 0-14.8 4.5-26.6 13.4-35.4 8.9-8.9 20.8-13.3 35.9-13.3 12.6 0 23 3.2 30.9 9.8 7.9 6.5 12.7 15.4 14.6 26.9h-27.1c-2.2-9.7-8.8-15.4-18.8-15.4-6.7 0-12.2 2.6-16.2 7.6-4 5.1-6.1 11.7-6.1 19.8 0 8.1 2.1 14.8 6.1 19.8q1.4 1.8 3.3 3.2 1.8 1.5 3.9 2.5 2.1 1 4.4 1.4 2.3 0.5 4.6 0.5c10.1 0 17-6 18.8-15.7h27.3c-1.9 11.4-6.9 20.4-15 27-8.3 6.6-18.8 9.9-31.6 9.9-15.1 0-26.9-4.3-35.4-13.1zm-48.7-83.1h26.2v95.1h-26.2zm139.2 0h26.2v95.1h-26.2v-95.1zm26.1-32.1v23.8h-26.2v-23.8z"/>
+              <g class="logo-disc-group">
+                <path class="logo-s1" d="m64 129.4c-35.4 0-64-28.7-64-64.3 0-35.5 28.6-64.2 64-64.2 35.4 0 64 28.7 64 64.2 0 35.6-28.6 64.3-64 64.3z"/>
+                <path class="logo-s0" d="m64 65.1v64.3h-64v-64.3z"/>
+                <path fill-rule="evenodd" class="logo-s2" d="m63.9 129.4h0.1v-64.3h-64c0 35.5 28.6 64.2 63.9 64.3z"/>
+              </g>
+              <circle class="logo-pulse" cx="64" cy="65" r="10" />
             </g>
-          </g>
-        </svg>
+          </svg>
         <div class="title-block">
           <div class="app-title">CLOCK ONAIR</div>
-          <div class="app-subtitle">Sélection du profil</div>
         </div>
       </div>
 
@@ -378,13 +386,14 @@
 
     <main class="content">
       <section class="field-group">
-        <label class="label" for="user-name">Nom ou indicatif</label>
+        <label class="label" for="user-name">Nom</label>
         <input
           type="text"
           id="user-name"
           class="input-text"
           autocomplete="off"
           placeholder="Ex. Marie, Studio Réal..."
+          maxlength="32"
         />
         <div class="small-hint">Ce nom apparaît dans le chat et la supervision.</div>
       </section>
@@ -394,19 +403,15 @@
         <div class="roles-grid">
           <button class="role-btn" type="button" data-role="animateur">
             <span>Animateur</span>
-            <span>Vue antenne + TOP</span>
           </button>
           <button class="role-btn" type="button" data-role="journaliste">
             <span>Journaliste</span>
-            <span>Vue antenne + infos invité</span>
           </button>
-          <button class="role-btn" type="button" data-role="technicien">
+          <button class="role-btn" type="button" data-role="tech">
             <span>Technicien</span>
-            <span>Vue antenne + monitoring</span>
           </button>
           <button class="role-btn" type="button" data-role="accueil">
             <span>Chargé d’accueil</span>
-            <span>Vue antenne + chat invité</span>
           </button>
         </div>
       </section>
@@ -432,70 +437,60 @@
     (function () {
       function byId(id) { return document.getElementById(id); }
 
-      window.addEventListener("DOMContentLoaded", function () {
+      var themeToggle = byId("theme-toggle");
+      var themeIcon = byId("theme-icon");
+      var themeLabel = byId("theme-label");
+      var nameInput = byId("user-name");
+      var roleButtons = document.querySelectorAll(".role-btn");
+      var studioOptions = document.querySelectorAll(".studio-option");
+      var enterButton = byId("btn-enter");
+      var errorMsg = byId("error-msg");
+
+      function applyTheme(mode) {
         var body = document.body;
-        var themeToggle = byId("theme-toggle");
-        var themeIcon = byId("theme-icon");
-        var themeLabel = byId("theme-label");
-        var nameInput = byId("user-name");
-        var roleButtons = document.querySelectorAll(".role-btn");
-        var studioOptions = document.querySelectorAll(".studio-option");
-        var btnEnter = byId("btn-enter");
-        var errorMsg = byId("error-msg");
+        if (!body) return;
+        body.classList.remove("theme-dark", "theme-light");
+        if (mode === "light") {
+          body.classList.add("theme-light");
+          if (themeIcon) themeIcon.textContent = "☼";
+          if (themeLabel) themeLabel.textContent = "Light";
+        } else {
+          body.classList.add("theme-dark");
+          if (themeIcon) themeIcon.textContent = "☾";
+          if (themeLabel) themeLabel.textContent = "Dark";
+        }
+      }
 
-        // Appliquer thème depuis localStorage
+      document.addEventListener("DOMContentLoaded", function () {
         try {
-          var storedTheme = window.localStorage.getItem("clock-theme");
-          if (storedTheme === "light") {
-            body.classList.remove("theme-dark");
-            body.classList.add("theme-light");
-            if (themeIcon) themeIcon.textContent = "☀︎";
-            if (themeLabel) themeLabel.textContent = "Light";
+          var storedTheme = window.localStorage.getItem("clock_theme");
+          if (storedTheme === "light" || storedTheme === "dark") {
+            applyTheme(storedTheme);
           } else {
-            body.classList.add("theme-dark");
+            applyTheme("dark");
           }
-        } catch (e) {}
+        } catch (e) {
+          applyTheme("dark");
+        }
 
-        // Pré-remplir nom / rôle / studio si déjà utilisés
-        try {
-          var storedName = window.localStorage.getItem("clock-user-name");
-          if (storedName && nameInput) nameInput.value = storedName;
-
-          var storedRole = window.localStorage.getItem("clock-user-role");
-          if (storedRole && roleButtons && roleButtons.length) {
-            roleButtons.forEach(function (btn) {
-              if (btn.getAttribute("data-role") === storedRole) {
-                btn.classList.add("role-active");
-              }
-            });
-          }
-
-          var storedStudio = window.localStorage.getItem("clock-studio");
-          if (storedStudio && studioOptions && studioOptions.length) {
-            studioOptions.forEach(function (opt) {
-              opt.classList.remove("studio-active");
-              if (opt.getAttribute("data-studio") === storedStudio.toUpperCase()) {
-                opt.classList.add("studio-active");
-              }
-            });
-          }
-        } catch (e) {}
-
-        // Toggle thème
         if (themeToggle) {
           themeToggle.addEventListener("click", function () {
-            var dark = body.classList.contains("theme-dark");
-            body.classList.toggle("theme-dark", !dark);
-            body.classList.toggle("theme-light", dark);
-            if (themeIcon) themeIcon.textContent = dark ? "☀︎" : "☾";
-            if (themeLabel) themeLabel.textContent = dark ? "Light" : "Dark";
+            var isLight = document.body.classList.contains("theme-light");
+            var next = isLight ? "dark" : "light";
+            applyTheme(next);
             try {
-              window.localStorage.setItem("clock-theme", dark ? "light" : "dark");
+              window.localStorage.setItem("clock_theme", next);
             } catch (e) {}
           });
         }
 
-        // Sélection rôle
+        try {
+          var storedName = window.localStorage.getItem("clock_user_name");
+          if (storedName && nameInput) {
+            nameInput.value = storedName;
+          }
+        } catch (e) {}
+
         if (roleButtons && roleButtons.length) {
           roleButtons.forEach(function (btn) {
             btn.addEventListener("click", function () {
@@ -505,7 +500,6 @@
           });
         }
 
-        // Sélection studio
         if (studioOptions && studioOptions.length) {
           studioOptions.forEach(function (opt) {
             opt.addEventListener("click", function () {
@@ -515,7 +509,6 @@
           });
         }
 
-        // Validation + navigation
         function enterClock() {
           if (errorMsg) errorMsg.textContent = "";
 
@@ -549,20 +542,20 @@
           }
 
           try {
-            window.localStorage.setItem("clock-user-name", name);
-            window.localStorage.setItem("clock-user-role", role);
-            window.localStorage.setItem("clock-studio", studio.toUpperCase());
+            window.localStorage.setItem("clock_user_name", name);
+            window.localStorage.setItem("clock_user_role", role);
+            window.localStorage.setItem("clock_user_studio", studio);
           } catch (e) {}
 
-          var url = "clock.html?studio=" + encodeURIComponent(studio.toUpperCase());
-          window.location.href = url;
+          var target = "clock.html";
+          var params = "?name=" + encodeURIComponent(name) +
+                       "&role=" + encodeURIComponent(role) +
+                       "&studio=" + encodeURIComponent(studio);
+          window.location.href = target + params;
         }
 
-        if (btnEnter) {
-          btnEnter.addEventListener("click", function (e) {
-            if (e && e.preventDefault) e.preventDefault();
-            enterClock();
-          });
+        if (enterButton) {
+          enterButton.addEventListener("click", enterClock);
         }
 
         if (nameInput) {

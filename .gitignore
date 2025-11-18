@@ -1,0 +1,23 @@
+# Backups
+*.bak
+*.bak.*
+*.backup.*
+*.save
+backups/
+
+# Node modules (si présents)
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

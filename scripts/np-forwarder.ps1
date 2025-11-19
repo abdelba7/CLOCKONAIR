@@ -85,21 +85,30 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
     # Déterminer si c'est un nouveau titre ou une mise à jour
     $isNewTrack = $true
     $updateType = "NOUVEAU"
+    $totalDuration = $DurationMs
+    $elapsed = 0
     
     if ($lastNP.ContainsKey($npKey)) {
         $isNewTrack = $false
         $updateType = "MAJ durée"
+        # La durée initiale est stockée, DurationMs actuel est le temps restant
+        $totalDuration = $lastNP[$npKey].InitialDuration
+        $elapsed = $totalDuration - $DurationMs
     }
     
     Write-Host "  Type       : $updateType" -ForegroundColor $(if ($isNewTrack) { "Cyan" } else { "Yellow" })
+    if (!$isNewTrack) {
+        Write-Host "  Temps écoulé : $elapsed ms" -ForegroundColor Gray
+    }
 
     # Payload JSON avec indication de mise à jour
     $payload = @{
         station       = $Station
         title         = $Title
         artist        = $Artist
-        durationMs    = $DurationMs
+        durationMs    = $totalDuration
         remainingMs   = $DurationMs
+        elapsedMs     = $elapsed
         isUpdate      = !$isNewTrack
         source        = "TopStudioNowPlaying"
         timestamp     = (Get-Date).ToString("o")
@@ -120,8 +129,15 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
             Write-Host "  → Réponse : $($response | ConvertTo-Json -Compress)" -ForegroundColor Gray
         }
         
-        # Mémoriser ce NP (mais on envoie quand même les mises à jour suivantes)
-        $lastNP[$npKey] = Get-Date
+        # Mémoriser ce NP avec sa durée initiale
+        if ($isNewTrack) {
+            $lastNP[$npKey] = @{
+                Timestamp = Get-Date
+                InitialDuration = $DurationMs
+            }
+        } else {
+            $lastNP[$npKey].Timestamp = Get-Date
+        }
         
         # Si la durée est 0, le titre a été arrêté
         if ($DurationMs -eq 0) {

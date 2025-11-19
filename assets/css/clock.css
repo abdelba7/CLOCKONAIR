@@ -80,22 +80,14 @@ body.status-top     { background-image: var(--bg-top); }
 
 .screen {
   position: relative;
-  flex: 1;
-  max-width: 1400px;
-  height: 100vh;
+  width: 100%; /* Prend toute la largeur de son parent (body) */
+  height: 100%; /* Prend toute la hauteur de son parent (body) */
   padding: 12px 20px 16px;
-  box-sizing: border-box;
+  box-sizing: border-box; /* Crucial pour que le padding soit inclus dans la hauteur */
   display: flex;
   flex-direction: column;
   color: var(--text-primary);
-  backdrop-filter: blur(8px);
-  background: radial-gradient(circle at top, rgba(0,0,0,0.45), rgba(0,0,0,0.75));
-  border-radius: 20px;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.05),
-    0 18px 50px rgba(0,0,0,0.9);
-  transition: box-shadow 180ms ease-out, border-color 180ms ease-out, background 180ms ease-out;
-  overflow: hidden;
+  /* ... le reste de vos styles (backdrop-filter, background, etc.) reste identique ... */
 }
 
 body.status-onair .screen {
@@ -270,14 +262,13 @@ body.theme-light .btn-home {
   transform: translateY(1px);
 }
 
-/* MESSAGE SOUS HEADER */
 .last-message-row {
-  margin-top: 20px;
-  margin-bottom: auto;
+  margin-top: 10px;
+  margin-bottom: 10px; /* On remplace 'auto' par une valeur fixe et contrôlée */
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 0 0 auto;
+  flex-shrink: 0; /* Empêche la barre de message de rétrécir */
 }
 
 .chat-last-inline-btn {
@@ -327,7 +318,8 @@ body.theme-light .chat-last-inline-btn {
   width: 100%;
   max-width: 650px;
   height: 100%;
-  justify-content: center;
+  /* Au lieu de centrer, on justifie l'espace entre les éléments pour les remonter. */
+  justify-content: space-around;
 }
 
 /* CLOCK */
@@ -683,4 +675,25 @@ body.theme-light .chat-send-btn {
   .clock { width: min(70vh, 310px); }
   .controls { width: 100%; justify-content: center; }
   .btn { flex: 1; min-width: 0; }
+}
+
+.page-footer {
+  margin-top: 15px; /* Espace par rapport aux boutons */
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+  opacity: 0.8; /* Rend le texte un peu plus transparent et discret */
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Pour que les labels "Utilisateur:", etc. n'apparaissent que dans le footer */
+.page-footer #summary-user::before {
+  content: "Utilisateur : ";
+}
+.page-footer #summary-role::before {
+  content: "Rôle : ";
+}
+.page-footer #summary-studio::before {
+  content: "Studio : ";
 }

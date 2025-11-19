@@ -133,10 +133,9 @@
       } catch (e) {}
     }
 
-    if (summaryUser)  summaryUser.textContent  = "Utilisateur : " + userName;
-    if (summaryRole)  summaryRole.textContent  = "Rôle : " + (userRole || "—");
-    if (summaryStudio) summaryStudio.textContent = "Studio : " + studio;
-
+	if (summaryUser)  summaryUser.textContent  = userName;
+	if (summaryRole)  summaryRole.textContent  = (userRole || "—");
+	if (summaryStudio) summaryStudio.textContent = studio;
     if (btnHome) {
       btnHome.addEventListener("click", function (e) {
         if (e && e.preventDefault) e.preventDefault();
@@ -164,19 +163,21 @@
       var isUpdate = np.payload && np.payload.isUpdate === true;
       var remainingMs = np.payload && np.payload.remainingMs ? np.payload.remainingMs : 0;
       var durationMs = np.payload && np.payload.durationMs ? np.payload.durationMs : 0;
+      var elapsedMs = np.payload && np.payload.elapsedMs ? np.payload.elapsedMs : 0;
       
-      // Si c'est une mise à jour, garder la durée initiale mais mettre à jour le temps restant
+      // Si c'est une mise à jour, utiliser la durée totale stockée
       if (isUpdate && currentNP && currentNP.title === np.title && currentNP.artist === np.artist) {
         // Mise à jour du temps restant en temps réel depuis TopStudio
         currentNP.remainingMs = remainingMs;
         currentNP.lastUpdate = Date.now();
+        // La durationMs reste celle du premier envoi
       } else {
         // Nouveau titre
         currentNP = {
           artist: np.artist || "",
           title: np.title || "",
           durationMs: durationMs,
-          remainingMs: remainingMs || durationMs,
+          remainingMs: remainingMs > 0 ? remainingMs : durationMs,
           receivedAt: np.receivedAt,
           startTime: Date.now(),
           lastUpdate: Date.now()
@@ -319,7 +320,7 @@
       var chronoSec = onAirRunning ? (Date.now() - onAirStart) / 1000 : onAirFrozenSec;
       if (headerOnAirChrono) headerOnAirChrono.textContent = formatMMSS(chronoSec);
 
-      // Calcul du NP ring basé sur remainingMs de TopStudio
+      // Calcul du NP ring basé sur remainingMs de TopStudio avec intro/outro
       var display = "00:00";
       var ringFraction = 0;
       var rootStyle = window.getComputedStyle(document.documentElement);
@@ -327,19 +328,36 @@
       var npTextColor = ringColor;
 
       if (currentNP && currentNP.durationMs > 0) {
-        // Utiliser remainingMs mis à jour par TopStudio si disponible
+        // Utiliser remainingMs mis à jour par TopStudio
         var timeSinceUpdate = Date.now() - currentNP.lastUpdate;
         var remainingSec = Math.max(0, (currentNP.remainingMs - timeSinceUpdate) / 1000);
         var totalSec = currentNP.durationMs / 1000;
         var elapsedSec = totalSec - remainingSec;
         
+        // Intro/Outro : 10s au début et 10s à la fin
+        var introDuration = 10;
+        var outroDuration = 10;
+        
         display = formatMMSS(remainingSec);
         ringFraction = Math.min(1, elapsedSec / totalSec);
         
-        // Couleur verte pour le NP en cours
-        ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
-        npTextColor = ringColor;
-        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
+        // Déterminer la phase : INTRO, MAIN, OUTRO
+        if (elapsedSec < introDuration) {
+          // INTRO - 10 premières secondes
+          ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
+          npTextColor = ringColor;
+          if (npPhaseLabelEl) npPhaseLabelEl.textContent = "INTRO";
+        } else if (remainingSec < outroDuration) {
+          // OUTRO - 10 dernières secondes
+          ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
+          npTextColor = ringColor;
+          if (npPhaseLabelEl) npPhaseLabelEl.textContent = "OUTRO";
+        } else {
+          // MAIN - le reste
+          ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
+          npTextColor = ringColor;
+          if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
+        }
       } else {
         // Pas de NP actif
         display = "00:00";

@@ -22,7 +22,8 @@ if (-not (Test-Path $LogFile)) {
 
 # Regex pour lignes du type :
 # [45A] 17/11/2025 13:00:03 > Now Playing : Titre - Artiste (83000) - 24 Mo
-$pattern = '^\[(.+?)\]\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}\s+>\s+Now Playing\s*:\s*(.+?)\s*-\s*(.+?)\s*\((\d+)\)'
+# Ajout capture fin de ligne pour Intro/Outro
+$pattern = '^\[(.+?)\]\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}\s+>\s+Now Playing\s*:\s*(.+?)\s*-\s*(.+?)\s*\((\d+)\)(.*)$'
 
 Write-Host "Monitoring du fichier..." -ForegroundColor Green
 Write-Host "En attente de nouvelles lignes 'Now Playing'..." -ForegroundColor Yellow
@@ -33,7 +34,7 @@ Write-Host ""
 $lineCount = 0
 $lastNP = @{}  # Stocker le dernier NP envoyé pour éviter les doublons
 
-# Lecture "en streaming" du fichier de log
+# Lecture "en streaming" du fichier de log (Tail 0 pour ne pas relire le passé, Wait pour le temps réel)
 Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
     $lineCount++
     $line = $_.Trim()
@@ -42,15 +43,35 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
     Write-Host "[Ligne $lineCount] " -NoNewline -ForegroundColor DarkGray
     if ([string]::IsNullOrWhiteSpace($line)) {
         Write-Host "(vide)" -ForegroundColor DarkGray
-        return
+        continue
     } else {
         Write-Host "$line" -ForegroundColor DarkGray
+    }
+
+    # Detection STOP / ARRET
+    if ($line -match "Stop" -or $line -match "Arrêt" -or $line -match "End") {
+        Write-Host "  → Arrêt détecté" -ForegroundColor Yellow
+        $payload = @{
+            station    = "45a"
+            title      = ""
+            artist     = ""
+            durationMs = 0
+            source     = "TopStudioNowPlaying"
+        } | ConvertTo-Json -Depth 2 -Compress
+        
+        try {
+             $response = Invoke-RestMethod -Uri $ApiUrl -Method Post -Body $payload -ContentType "application/json; charset=utf-8" -TimeoutSec 5
+             Write-Host "  → Envoi STOP OK" -ForegroundColor Green
+        } catch {
+             Write-Host "  → Erreur envoi STOP" -ForegroundColor Red
+        }
+        continue
     }
 
     # On ne traite que les lignes "Now Playing"
     if ($line -notmatch "Now Playing") { 
         Write-Host "  → Pas de 'Now Playing' dans cette ligne" -ForegroundColor DarkGray
-        return 
+        continue 
     }
 
     Write-Host "================================================" -ForegroundColor Cyan
@@ -59,59 +80,51 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
     $m = [regex]::Match($line, $pattern)
     if (-not $m.Success) {
         Write-Host "  → Ligne ignorée (ne matche pas le pattern NP)" -ForegroundColor Yellow
-        return
+        continue
     }
 
     $Station     = $m.Groups[1].Value.Trim()
     $Title       = $m.Groups[2].Value.Trim()
     $Artist      = $m.Groups[3].Value.Trim()
     $DurationMs  = [int]$m.Groups[4].Value
+    $Extra       = $m.Groups[5].Value.Trim()
+
+    # Parsing Intro / Outro (supposés en secondes dans le log)
+    $Intro = 0
+    $Outro = 0
+    # Formats supportés: "Intro: 12", "Intro=12", "Intro (12)", "Intro : 12"
+    if ($Extra -match 'Intro\s*[:=\(]?\s*(\d+)') { $Intro = [int]$matches[1] }
+    if ($Extra -match 'Outro\s*[:=\(]?\s*(\d+)') { $Outro = [int]$matches[1] }
 
     Write-Host "  Station    : $Station" -ForegroundColor Green
     Write-Host "  Titre      : $Title" -ForegroundColor Green
     Write-Host "  Artiste    : $Artist" -ForegroundColor Green
     Write-Host "  Durée (ms) : $DurationMs" -ForegroundColor Green
+    if ($Intro -gt 0) { Write-Host "  Intro (s)  : $Intro" -ForegroundColor Cyan }
+    if ($Outro -gt 0) { Write-Host "  Outro (s)  : $Outro" -ForegroundColor Cyan }
 
-    # Ignorer uniquement les lignes complètement vides
-    if ([string]::IsNullOrWhiteSpace($Title) -and [string]::IsNullOrWhiteSpace($Artist)) {
-        Write-Host "  → Ignoré (titre et artiste vides)" -ForegroundColor Yellow
+    # Ignorer les lignes vides ou avec durée 0
+    if ([string]::IsNullOrWhiteSpace($Title) -or [string]::IsNullOrWhiteSpace($Artist) -or $DurationMs -eq 0) {
+        Write-Host "  → Ignoré (titre/artiste vide ou durée = 0)" -ForegroundColor Yellow
         Write-Host ""
-        return
+        continue
     }
 
     # Créer une clé unique pour ce NP
     $npKey = "$Station|$Title|$Artist"
     
-    # Déterminer si c'est un nouveau titre ou une mise à jour
-    $isNewTrack = $true
-    $updateType = "NOUVEAU"
-    $totalDuration = $DurationMs
-    $elapsed = 0
-    
-    if ($lastNP.ContainsKey($npKey)) {
-        $isNewTrack = $false
-        $updateType = "MAJ durée"
-        # La durée initiale est stockée, DurationMs actuel est le temps restant
-        $totalDuration = $lastNP[$npKey].InitialDuration
-        $elapsed = $totalDuration - $DurationMs
-    }
-    
-    Write-Host "  Type       : $updateType" -ForegroundColor $(if ($isNewTrack) { "Cyan" } else { "Yellow" })
-    if (!$isNewTrack) {
-        Write-Host "  Temps écoulé : $elapsed ms" -ForegroundColor Gray
-    }
+    # NOTE: Suppression du debounce de 10s pour garantir le temps réel
+    # Si le log envoie une mise à jour rapide (ex: correction durée), on la prend.
 
-    # Payload JSON avec indication de mise à jour
+    # Payload JSON optimisé (uniquement les infos nécessaires)
     $payload = @{
-        station       = $Station
-        title         = $Title
-        artist        = $Artist
-        durationMs    = $totalDuration
-        remainingMs   = $DurationMs
-        elapsedMs     = $elapsed
-        isUpdate      = !$isNewTrack
-        source        = "TopStudioNowPlaying"
-        timestamp     = (Get-Date).ToString("o")
+        station    = $Station
+        title      = $Title
+        artist     = $Artist
+        durationMs = $DurationMs
+        introMs    = $Intro * 1000
+        outroMs    = $Outro * 1000
+        source     = "TopStudioNowPlaying"
     } | ConvertTo-Json -Depth 2 -Compress
 
     Write-Host "  JSON : $payload" -ForegroundColor Gray
@@ -129,20 +142,8 @@ Get-Content -Path $LogFile -Encoding UTF8 -Tail 0 -Wait | ForEach-Object {
             Write-Host "  → Réponse : $($response | ConvertTo-Json -Compress)" -ForegroundColor Gray
         }
         
-        # Mémoriser ce NP avec sa durée initiale
-        if ($isNewTrack) {
-            $lastNP[$npKey] = @{
-                Timestamp = Get-Date
-                InitialDuration = $DurationMs
-            }
-        } else {
-            $lastNP[$npKey].Timestamp = Get-Date
-        }
-        
-        # Si la durée est 0, le titre a été arrêté
-        if ($DurationMs -eq 0) {
-            Write-Host "  ⚠ Titre arrêté (durée = 0)" -ForegroundColor Yellow
-        }
+        # Mémoriser ce NP pour éviter les doublons
+        $lastNP[$npKey] = Get-Date
     }
     catch {
         Write-Host "  → ERREUR envoi API" -ForegroundColor Red

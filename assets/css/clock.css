@@ -381,6 +381,32 @@ body.theme-light .clock-background-circle {
   stroke-dashoffset: 440;
   filter: drop-shadow(0 0 6px rgba(35, 213, 107, 0.75));
   transition: stroke 120ms ease-out;
+  transform-origin: 50% 50%;
+  transform: rotate(-90deg);
+}
+
+.np-ring-intro {
+  fill: none;
+  stroke: var(--np-orange);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0 1000;
+  stroke-dashoffset: 0;
+  opacity: 0.8;
+  transform-origin: 50% 50%;
+  transform: rotate(-90deg);
+}
+
+.np-ring-outro {
+  fill: none;
+  stroke: var(--danger);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0 1000;
+  stroke-dashoffset: 0;
+  opacity: 0.8;
+  transform-origin: 50% 50%;
+  transform: rotate(-90deg);
 }
 
 .clock-core {

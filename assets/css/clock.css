@@ -692,6 +692,16 @@ body.theme-light .chat-send-btn {
   .central-column { max-width: 100%; }
   .clock { width: min(68vh, 360px); }
   .controls { gap: 12px; }
+  
+  /* Augmenter la taille des cercles pour éviter le débordement du texte sur mobile */
+  .clock-background-circle {
+    r: 104;
+  }
+  
+  .np-ring-base,
+  .np-ring-progress {
+    r: 98;
+  }
 }
 
 @media (max-width: 480px) {
@@ -701,6 +711,16 @@ body.theme-light .chat-send-btn {
   .clock { width: min(70vh, 310px); }
   .controls { width: 100%; justify-content: center; }
   .btn { flex: 1; min-width: 0; }
+  
+  /* Augmenter encore plus la taille des cercles pour les petits écrans */
+  .clock-background-circle {
+    r: 108;
+  }
+  
+  .np-ring-base,
+  .np-ring-progress {
+    r: 102;
+  }
 }
 
 .page-footer {

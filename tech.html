@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>CLOCK ONAIR – Tech</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- On réutilise clock.css sans le modifier -->
+  <link rel="stylesheet" href="css/clock.css" />
+  <!-- Ajouts spécifiques Tech -->
+  <link rel="stylesheet" href="css/tech.css" />
+</head>
+
+<body class="theme-dark status-default">
+  <div class="screen">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-wrapper">
+          <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 515 130" aria-hidden="true">
+            <g id="ici">
+              <path fill-rule="evenodd" class="logo-s0 logo-text-shape" d="m170.1 0.7v23.8h-26.2v-23.8zm22.5 115.2c-8.7-8.7-13-20.5-13-35.5 0-14.8 4.5-26.6 13.4-35.4 8.9-8.9 20.8-13.3 35.9-13.3 12.6 0 23 3.2 30.9 9.8 7.9 6.5 12.7 15.4 14.6 26.9h-27.1c-2.2-9.7-8.8-15.4-18.8-15.4-6.7 0-12.2 2.6-16.2 7.6-4 5.1-6.1 11.7-6.1 19.8 0 8.1 2.1 14.8 6.1 19.8q1.4 1.8 3.3 3.2 1.8 1.5 3.9 2.5 2.1 1 4.4 1.4 2.3 0.5 4.6 0.5c10.1 0 17-6 18.8-15.7h27.3c-1.9 11.4-6.9 20.4-15 27-8.3 6.6-18.8 9.9-31.6 9.9-15.1 0-26.9-4.3-35.4-13.1zm-48.7-83.1h26.2v95.1h-26.2zm139.2 0h26.2v95.1h-26.2v-95.1zm26.1-32.1v23.8h-26.2v-23.8z"/>
+              <g class="logo-disc-group">
+                <path class="logo-s1" d="m64 129.4c-35.4 0-64-28.7-64-64.3 0-35.5 28.6-64.2 64-64.2 35.4 0 64 28.7 64 64.2 0 35.6-28.6 64.3-64 64.3z"/>
+                <path class="logo-s0" d="m64 65.1v64.3h-64v-64.3z"/>
+                <path fill-rule="evenodd" class="logo-s2" d="m63.9 129.4h0.1v-64.3h-64c0 35.5 28.6 64.2 63.9 64.3z"/>
+              </g>
+              <circle class="logo-pulse" cx="64" cy="65" r="10" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="header-center-inner"></div>
+      </div>
+
+      <!-- Header-right = icônes veille / play / config -->
+      <div class="header-right tech-header-actions">
+        <!-- VEILLE -->
+        <button class="icon-button icon-standby" id="btn-standby" type="button" aria-label="Retour accueil">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2v8" stroke-linecap="round"/>
+            <path d="M7 4.5a8 8 0 1 0 10 0" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <!-- PLAY -->
+        <button class="icon-button" id="btn-player" type="button" aria-label="Ouvrir player">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <polygon points="8,5 19,12 8,19"></polygon>
+          </svg>
+        </button>
+
+        <!-- CONFIG -->
+        <button class="icon-button" id="btn-config" type="button" aria-label="Configuration">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M19.2 12a7.2 7.2 0 0 0-.1-1l2-1.6-2-3.5-2.5.8a7.1 7.1 0 0 0-1.7-1l-.4-2.6H9.5l-.4 2.6a7.1 7.1 0 0 0-1.7 1l-2.5-.8-2 3.5 2 1.6a7.2 7.2 0 0 0 0 2l-2 1.6 2 3.5 2.5-.8c.5.4 1.1.7 1.7 1l.4 2.6h4.9l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5.8 2-3.5-2-1.6c.1-.3.1-.7.1-1z"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- BANDEAU DERNIER MESSAGE SOUS HEADER -->
+    <div class="last-message-row">
+      <button class="chat-last-inline-btn" id="chat-last-inline" type="button">
+        <span id="chat-last-user">Messagerie :</span>
+        <span id="chat-last-inline-text">En attente...</span>
+      </button>
+    </div>
+
+    <!-- CHRONO ON AIR (standalone) -->
+    <div class="onair-chrono-standalone" id="onair-chrono-header">00:00</div>
+
+    <!-- BLOC CENTRAL -->
+    <main class="main-area">
+      <div class="central-column">
+        <div class="clock-container">
+          <div class="clock">
+            <svg class="clock-svg-main" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+              <circle class="clock-background-circle" cx="100" cy="100" r="72" />
+              <g id="dots-layer"></g>
+              <circle class="np-ring-base" cx="100" cy="100" r="70"
+                      transform="rotate(-90 100 100)" />
+              <circle class="np-ring-progress" id="np-ring-progress" cx="100" cy="100" r="70"
+                      transform="rotate(-90 100 100)" />
+            </svg>
+
+            <div class="clock-core">
+              <div class="clock-time" id="clock-time">--:--:--</div>
+              <div class="onair-label" id="onair-label"></div>
+              <div class="np-phase-label" id="np-phase-label"></div>
+              <div class="np-chrono-main" id="np-chrono-main">00:00</div>
+            </div>
+          </div>
+        </div>
+
+        <section class="now-playing">
+          <div class="now-playing-artist" id="np-artist"> </div>
+          <div class="now-playing-title" id="np-title"> </div>
+        </section>
+
+        <div class="controls">
+          <button class="btn btn-primary" id="btn-top" type="button">TOP</button>
+          <button class="btn" id="btn-ordres" type="button">ORDRES</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- CHAT MODAL -->
+  <div class="chat-overlay" id="chat-overlay">
+    <div class="chat-modal" id="chat-modal">
+      <div class="chat-modal-header" id="chat-modal-header">
+        <div class="chat-modal-title" id="chat-modal-title">Chat studio</div>
+        <button class="chat-close" id="chat-close" type="button">×</button>
+      </div>
+      <div class="chat-modal-body" id="chat-modal-body"></div>
+      <div class="chat-modal-input">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Votre message…" />
+        <button class="chat-send-btn" id="chat-send" type="button">Envoyer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIG / MONITORING MODAL -->
+  <div class="config-overlay" id="config-overlay">
+    <div class="config-modal" id="config-modal" role="dialog" aria-modal="true" aria-label="Configuration technique">
+      <div class="config-header">
+        <div class="config-title">Configuration technique</div>
+        <button class="config-close" id="config-close" type="button">×</button>
+      </div>
+
+      <div class="config-tabs">
+        <button class="config-tab-button active" id="tab-config" type="button">Config</button>
+        <button class="config-tab-button" id="tab-display" type="button">Display</button>
+        <button class="config-tab-button" id="tab-monitor" type="button">Monitoring</button>
+      </div>
+
+      <!-- TAB CONFIG -->
+      <div class="config-content" id="config-content">
+        <div class="config-section">
+          <h3>Simulations</h3>
+          <div class="config-row">
+            <div class="config-label">ON AIR (local)</div>
+            <div class="config-actions">
+              <button class="mini-btn" id="sim-onair-toggle" type="button">Toggle</button>
+              <button class="mini-btn" id="sim-onair-reset" type="button">Reset chrono</button>
+            </div>
+          </div>
+          <div class="config-row">
+            <div class="config-label">TOP (global)</div>
+            <div class="config-actions">
+              <button class="mini-btn" id="sim-top-pulse" type="button">Pulse</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Now Playing – Simulateur</h3>
+          <div class="np-sim-grid">
+            <label class="np-sim-label">Artiste</label>
+            <input id="sim-np-artist" class="np-sim-input" type="text" placeholder="Artiste…" />
+
+            <label class="np-sim-label">Titre</label>
+            <input id="sim-np-title" class="np-sim-input" type="text" placeholder="Titre…" />
+
+            <label class="np-sim-label">Durée (s)</label>
+            <input id="sim-np-duration" class="np-sim-input" type="number" min="5" step="1" value="180" />
+
+            <label class="np-sim-label">Intro (s)</label>
+            <input id="sim-np-intro" class="np-sim-input" type="number" min="0" step="1" value="10" />
+
+            <label class="np-sim-label">Outro (s)</label>
+            <input id="sim-np-outro" class="np-sim-input" type="number" min="0" step="1" value="10" />
+          </div>
+
+          <div class="np-sim-actions">
+            <button class="mini-btn" id="sim-np-send" type="button">Envoyer NP</button>
+            <button class="mini-btn" id="sim-np-clear" type="button">Stop / Clear</button>
+            <button class="mini-btn ghost" id="sim-np-preset1" type="button">Preset 1</button>
+            <button class="mini-btn ghost" id="sim-np-preset2" type="button">Preset 2</button>
+          </div>
+
+          <div class="config-hint">
+            Envoie vers backend si l’API de simulation existe, sinon applique localement et broadcast WS.
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB DISPLAY -->
+      <div class="config-content hidden" id="display-content">
+        <div class="config-section">
+          <h3>API Radio France</h3>
+          <div class="config-row">
+            <label class="config-label">Token API</label>
+            <input id="display-api-token" class="np-sim-input" type="text" placeholder="Votre token API Radio France..." style="flex: 1;" />
+          </div>
+          <div class="config-row">
+            <button class="mini-btn" id="display-save-token" type="button">Enregistrer Token</button>
+            <button class="mini-btn ghost" id="display-test-api" type="button">Tester API</button>
+            <button class="mini-btn ghost" id="display-demo-toggle" type="button">Mode Démo</button>
+          </div>
+          <div class="config-hint">
+            Obtenez votre token sur <a href="https://developers.radiofrance.fr" target="_blank" style="color: var(--accent);">developers.radiofrance.fr</a><br>
+            <span id="demo-mode-status" style="color: var(--accent-warn); display: none;">⚠️ Mode démo activé (données fictives)</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Mode d'affichage</h3>
+          <div class="config-row">
+            <label class="config-label">Mode actif</label>
+            <select id="display-mode" class="np-sim-input" style="flex: 1;">
+              <option value="show">Émission en cours</option>
+              <option value="event">Événement personnalisé</option>
+              <option value="nowplaying">Now Playing</option>
+              <option value="schedule">Programme du jour</option>
+            </select>
+          </div>
+          <div class="config-row">
+            <label class="config-label">Thème</label>
+            <select id="display-theme" class="np-sim-input" style="flex: 1;">
+              <option value="dark">Sombre</option>
+              <option value="light">Clair</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="config-section" id="event-config" style="display: none;">
+          <h3>📅 Configuration Événement</h3>
+          
+          <div class="config-hint" style="margin-bottom: 15px; background: rgba(0,120,212,0.1); padding: 12px; border-radius: 6px; border-left: 3px solid #0078d4;">
+            💡 <strong>Nouveau :</strong> Utilisez la <a href="event-config.html" target="_blank" style="color: #4a9eff; text-decoration: underline;">page dédiée</a> pour une interface simplifiée d'upload d'image
+          </div>
+          
+          <div class="config-row">
+            <label class="config-label">Titre *</label>
+            <input id="display-event-title" class="np-sim-input" type="text" placeholder="Ex: Concert de Noël 2025" style="flex: 1;" />
+          </div>
+          
+          <div class="config-row">
+            <label class="config-label">Sous-titre</label>
+            <input id="display-event-subtitle" class="np-sim-input" type="text" placeholder="Ex: Samedi 21 décembre à 20h" style="flex: 1;" />
+          </div>
+          
+          <div class="config-row">
+            <label class="config-label">Description</label>
+            <textarea id="display-event-details" class="np-sim-input" rows="3" placeholder="Ex: Soirée musicale exceptionnelle avec l'orchestre symphonique..." style="flex: 1; resize: vertical;"></textarea>
+          </div>
+          
+          <div class="config-row" style="flex-direction: column; align-items: stretch;">
+            <label class="config-label" style="margin-bottom: 8px;">Image de l'événement</label>
+            
+            <!-- Option 1: Upload fichier -->
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <input id="display-event-image-file" type="file" accept="image/*" style="flex: 1; padding: 8px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; color: #fff;" />
+              <button class="mini-btn" id="display-event-upload" type="button">📤 Upload</button>
+            </div>
+            
+            <!-- Option 2: URL -->
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span style="color: #888; font-size: 12px;">ou URL:</span>
+              <input id="display-event-image" class="np-sim-input" type="text" placeholder="https://exemple.com/affiche.jpg" style="flex: 1;" />
+            </div>
+            
+            <!-- Aperçu miniature -->
+            <div id="event-image-preview" style="margin-top: 10px; display: none;">
+              <img id="event-image-preview-img" src="" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 4px; border: 2px solid #444;" />
+              <button class="mini-btn ghost" id="display-event-clear-image" type="button" style="margin-left: 10px;">❌ Supprimer</button>
+            </div>
+          </div>
+          
+          <div class="config-row" style="gap: 10px;">
+            <button class="mini-btn" id="display-event-preview" type="button">👁️ Aperçu complet</button>
+            <button class="mini-btn" id="display-event-save-quick" type="button">💾 Enregistrer événement</button>
+          </div>
+          
+          <div class="config-hint" style="margin-top: 10px;">
+            💡 L'image sera convertie en Base64 et stockée localement. Format recommandé: JPG/PNG, max 2 Mo.
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>⏱️ Bascule automatique API / Événement</h3>
+          <div class="config-row">
+            <label class="config-label">Activer bascule auto</label>
+            <input id="display-auto-switch-enabled" type="checkbox" checked />
+          </div>
+          <div class="config-row">
+            <label class="config-label">Intervalle (secondes)</label>
+            <input id="display-auto-switch-interval" class="np-sim-input" type="number" min="5" max="120" step="5" value="20" style="width: 120px;" />
+          </div>
+          <div class="config-hint">
+            🔄 Alterne automatiquement entre l'API Radio France et votre événement. Si aucun événement n'est configuré, seule l'API sera affichée.
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Rotation multi-modes (avancé)</h3>
+          <div class="config-row">
+            <label class="config-label">Activer rotation</label>
+            <input id="display-rotation-enabled" type="checkbox" />
+          </div>
+          <div class="config-row">
+            <label class="config-label">Intervalle (secondes)</label>
+            <input id="display-rotation-interval" class="np-sim-input" type="number" min="10" step="5" value="60" style="width: 120px;" />
+          </div>
+          <div class="config-hint">
+            ⚠️ La bascule auto API/Événement est prioritaire si activée.
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Actions</h3>
+          <div class="config-row">
+            <button class="mini-btn" id="display-save-config" type="button">💾 Enregistrer</button>
+            <button class="mini-btn" id="display-open-page" type="button">🚀 Ouvrir Display</button>
+            <button class="mini-btn ghost" id="display-reset-config" type="button">🔄 Réinitialiser</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB MONITORING -->
+      <div class="config-content hidden" id="monitor-content">
+        <div class="config-section">
+          <h3>Backend</h3>
+          <div class="config-row">
+            <div class="config-label">Health</div>
+            <div class="config-value" id="mon-health">…</div>
+          </div>
+          <div class="config-row">
+            <div class="config-label">NTP offset</div>
+            <div class="config-value" id="mon-ntp">…</div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>WebSocket</h3>
+          <div class="config-row">
+            <div class="config-label">État WS</div>
+            <div class="config-value" id="mon-ws">…</div>
+          </div>
+          <div class="config-row">
+            <div class="config-label">Dernier message</div>
+            <div class="config-value" id="mon-lastws">…</div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Arduinos</h3>
+          <div class="arduino-list" id="mon-arduinos">
+            <div class="arduino-item">Studio A : …</div>
+            <div class="arduino-item">Studio B : …</div>
+            <div class="arduino-item">Extérieur : …</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYER MODAL -->
+  <div class="player-overlay" id="player-overlay">
+    <div class="player-modal" id="player-modal" role="dialog" aria-modal="true" aria-label="Player Live">
+      <div class="player-header">
+        <div class="player-title">
+          <div class="player-station" id="player-station">ici Orléans</div>
+          <div class="player-show" id="player-show">Émission en cours…</div>
+        </div>
+        <button class="player-close" id="player-close" type="button">×</button>
+      </div>
+
+      <div class="player-body">
+        <iframe 
+          src="https://embed.radiofrance.fr/ici/39" 
+          width="100%" 
+          height="400" 
+          frameborder="0"
+          scrolling="no"
+          style="border-radius: 8px;">
+        </iframe>
+      </div>
+    </div>
+  </div>
+
+  <audio id="top-sound" preload="auto">
+    <source
+      src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAEQAAAB8fHx3d3dwcHBvb29sbGxra2tmZmZkZGRjY2Nra2tsbGxvb29wcHB3d3d8fHx5eXl7e3t5eXl3d3dvb29tbW1tbW1vb29zc3N3d3d7e3t/f3////9/f39/f3t7e3l5eXd3d3FxcW1tbWxsbG1tbXFxcXd3d3l5eXt7e39/f3////9/f3+AgIA="
+      type="audio/wav"
+    />
+  </audio>
+
+  <script src="js/radiofrance-api.js?v=20251121"></script>
+  <script src="js/tech.js?v=20251121"></script>
+</body>
+</html>

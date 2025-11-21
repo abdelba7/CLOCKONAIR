@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Display - ici Orléans</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { margin-bottom: 20px; color: #0078d4; }
+    .section {
+      background: #2a2a2a;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .section h2 { 
+      margin-bottom: 15px; 
+      color: #4a9eff;
+      font-size: 18px;
+    }
+    button {
+      background: #0078d4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover { background: #005a9e; }
+    button.secondary {
+      background: #444;
+    }
+    button.secondary:hover { background: #555; }
+    .result {
+      background: #1a1a1a;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 4px;
+      border-left: 3px solid #0078d4;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    .status.ok { background: #2d7d2d; }
+    .status.error { background: #d32f2f; }
+    .status.warn { background: #ff9800; }
+    .info { color: #999; font-size: 14px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Test Display - API Radio France</h1>
+    
+    <div class="section">
+      <h2>1. Configuration</h2>
+      <p class="info">
+        Token API: <span id="token-status" class="status warn">Non configuré</span><br>
+        Mode démo: <span id="demo-status" class="status">Vérifie...</span>
+      </p>
+      <button onclick="toggleDemoMode()">Basculer Mode Démo</button>
+      <button class="secondary" onclick="clearCache()">Vider Cache</button>
+    </div>
+    
+    <div class="section">
+      <h2>2. Tests API</h2>
+      <button onclick="testStationInfo()">Test Station Info</button>
+      <button onclick="testCurrentShow()">Test Émission Actuelle</button>
+      <button onclick="testSchedule()">Test Programme</button>
+      <div id="api-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="section">
+      <h2>3. Navigation</h2>
+      <button onclick="openDisplay()">Ouvrir Display</button>
+      <button onclick="openTech()">Ouvrir Tech</button>
+      <button onclick="openClock()">Ouvrir Clock</button>
+    </div>
+  </div>
+
+  <script src="js/radiofrance-api.js"></script>
+  <script>
+    // Mise à jour du statut
+    function updateStatus() {
+      const hasToken = RadioFranceAPI.hasToken();
+      const isDemoMode = localStorage.getItem('radiofrance_demo_mode') === 'true';
+      
+      document.getElementById('token-status').textContent = hasToken ? 'Configuré ✓' : 'Non configuré';
+      document.getElementById('token-status').className = hasToken ? 'status ok' : 'status warn';
+      
+      document.getElementById('demo-status').textContent = isDemoMode ? 'Activé ✓' : 'Désactivé';
+      document.getElementById('demo-status').className = isDemoMode ? 'status warn' : 'status ok';
+    }
+
+    function toggleDemoMode() {
+      const current = localStorage.getItem('radiofrance_demo_mode') === 'true';
+      RadioFranceAPI.setDemoMode(!current);
+      updateStatus();
+      alert(current ? 'Mode démo désactivé' : 'Mode démo activé');
+    }
+
+    function clearCache() {
+      RadioFranceAPI.clearCache();
+      alert('Cache vidé !');
+    }
+
+    function showResult(title, data) {
+      const resultDiv = document.getElementById('api-result');
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = `=== ${title} ===\n\n${JSON.stringify(data, null, 2)}`;
+    }
+
+    async function testStationInfo() {
+      showResult('Chargement...', { status: 'En cours...' });
+      try {
+        const data = await RadioFranceAPI.getStationInfo();
+        showResult('Station Info', data || { error: 'Aucune donnée retournée' });
+      } catch (err) {
+        showResult('Erreur Station Info', { error: err.message });
+      }
+    }
+
+    async function testCurrentShow() {
+      showResult('Chargement...', { status: 'En cours...' });
+      try {
+        const data = await RadioFranceAPI.getCurrentShow();
+        showResult('Émission Actuelle', data || { error: 'Aucune donnée retournée' });
+      } catch (err) {
+        showResult('Erreur Émission', { error: err.message });
+      }
+    }
+
+    async function testSchedule() {
+      showResult('Chargement...', { status: 'En cours...' });
+      try {
+        const data = await RadioFranceAPI.getTodaySchedule();
+        showResult('Programme', data || { error: 'Aucune donnée retournée' });
+      } catch (err) {
+        showResult('Erreur Programme', { error: err.message });
+      }
+    }
+
+    function openDisplay() {
+      window.open('display.html', '_blank');
+    }
+
+    function openTech() {
+      window.open('tech.html', '_blank');
+    }
+
+    function openClock() {
+      window.open('clock.html', '_blank');
+    }
+
+    // Initialisation
+    updateStatus();
+    console.log('Test Display chargé - Mode démo:', localStorage.getItem('radiofrance_demo_mode'));
+  </script>
+</body>
+</html>

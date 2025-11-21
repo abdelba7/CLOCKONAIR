@@ -1,0 +1,377 @@
+/* Tech CSS = extension de clock.css sans le modifier */
+
+/* === HEADER ACTIONS (icônes) === */
+.tech-header-actions {
+  gap: 10px;
+}
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: radial-gradient(circle at top, rgba(255,255,255,0.12), rgba(0,0,0,0.65));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  transition: transform 0.08s ease-out,
+              box-shadow 0.12s ease-out,
+              background 0.12s ease-out,
+              border-color 0.12s ease-out;
+}
+
+.icon-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--text-primary);
+  stroke-width: 1.6;
+}
+
+.icon-button polygon {
+  fill: var(--text-primary);
+  stroke: none;
+}
+
+.icon-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.icon-button.btn-active {
+  box-shadow: 0 0 18px rgba(255,255,255,0.35);
+  border-color: var(--accent);
+}
+
+/* Veille en rouge subtil */
+.icon-button.icon-standby svg path {
+  stroke: var(--danger);
+}
+
+/* === MODAL CONFIG / MONITORING === */
+.config-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.45);
+  z-index: 60;
+}
+
+.config-modal {
+  position: relative;
+  width: 660px;
+  max-width: 96vw;
+  max-height: 88vh;
+  background: rgba(10,10,14,0.98);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  background: radial-gradient(circle at top, rgba(255,255,255,0.08), rgba(0,0,0,0.3));
+}
+
+.config-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.config-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.config-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.16);
+  background: radial-gradient(circle at top, rgba(255,255,255,0.08), rgba(0,0,0,0.45));
+}
+
+.config-tab-button {
+  flex: 1;
+  padding: 10px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.config-tab-button.active {
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--accent);
+}
+
+.config-content {
+  padding: 10px 14px 12px;
+  overflow-y: auto;
+}
+
+.config-content.hidden { display: none; }
+
+.config-section { margin-bottom: 12px; }
+
+.config-section h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.08);
+}
+.config-row:last-child { border-bottom: none; }
+
+.config-label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.config-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.config-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mini-btn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(0,0,0,0.6);
+  color: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.08s ease-out, filter 0.12s ease-out;
+}
+.mini-btn:active { transform: translateY(1px) scale(0.98); }
+.mini-btn.ghost { opacity: 0.75; }
+
+.config-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.85;
+  margin-top: 6px;
+}
+
+/* NP simulator layout */
+.np-sim-grid {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 8px;
+  margin-top: 4px;
+}
+.np-sim-label {
+  align-self: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.np-sim-input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 7px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(0,0,0,0.45);
+  color: inherit;
+  outline: none;
+}
+
+.np-sim-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* Arduinos list */
+.arduino-list {
+  display: grid;
+  gap: 6px;
+}
+.arduino-item {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* === PLAYER MODAL === */
+.player-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.45);
+  z-index: 70;
+}
+
+.player-modal {
+  width: 520px;
+  max-width: 95vw;
+  max-height: 85vh;
+  background: rgba(10,10,14,0.98);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.9);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  background: radial-gradient(circle at top, rgba(255,255,255,0.08), rgba(0,0,0,0.3));
+}
+
+.player-title { display: grid; gap: 2px; }
+.player-station {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.player-show {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.player-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.player-body {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.player-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.player-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-track {
+  text-align: center;
+  display: grid;
+  gap: 2px;
+}
+.player-track-artist {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.player-track-title {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.player-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: rgba(0,0,0,0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.player-btn svg { width: 22px; height: 22px; }
+.player-btn polygon { fill: var(--text-primary); }
+
+.player-volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 180px;
+}
+.vol-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.player-volume input[type="range"] { width: 100%; }
+
+/* Light theme tweaks */
+body.theme-light .config-modal,
+body.theme-light .player-modal {
+  background: rgba(246,248,255,0.98);
+  color: var(--text-primary-light);
+  border-color: rgba(0,0,0,0.12);
+}
+body.theme-light .np-sim-input {
+  background: rgba(255,255,255,0.95);
+}
+body.theme-light .mini-btn,
+body.theme-light .player-btn {
+  background: rgba(255,255,255,0.9);
+}

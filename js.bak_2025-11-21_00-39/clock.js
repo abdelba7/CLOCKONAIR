@@ -104,6 +104,10 @@
     var headerOnAirChrono = byId("onair-chrono-header");
     var btnHome = byId("btn-home");
 
+    var summaryUser = byId("summary-user");
+    var summaryRole = byId("summary-role");
+    var summaryStudio = byId("summary-studio");
+
     var userName = "Moi";
     var userRole = null;
     var studio = "A";
@@ -129,6 +133,10 @@
       } catch (e) {}
     }
 
+    if (summaryUser)  summaryUser.textContent  = "Utilisateur : " + userName;
+    if (summaryRole)  summaryRole.textContent  = "Rôle : " + (userRole || "—");
+    if (summaryStudio) summaryStudio.textContent = "Studio : " + studio;
+
     if (btnHome) {
       btnHome.addEventListener("click", function (e) {
         if (e && e.preventDefault) e.preventDefault();
@@ -147,30 +155,9 @@
 
     var npArtistEl = byId("np-artist");
     var npTitleEl = byId("np-title");
-    
-    // Référence au cercle de fond de l'horloge
-    var clockBackgroundCircle = document.querySelector(".clock-background-circle");
-
-    var currentNP = null;
 
     function applyNowPlaying(np) {
-      // np est la structure renvoyée par /api/nowplaying.nowPlaying
-      if (!np || (!np.title && !np.artist)) {
-        currentNP = null;
-        if (npArtistEl) npArtistEl.textContent = " ";
-        if (npTitleEl)  npTitleEl.textContent  = " ";
-        return;
-      }
-
-      currentNP = np;
-
-      if (!currentNP.receivedAt) {
-        currentNP.receivedAt = Date.now();
-      } else if (typeof currentNP.receivedAt === "string") {
-        // on stocke en ms pour faciliter les calculs
-        currentNP.receivedAt = new Date(currentNP.receivedAt).getTime();
-      }
-
+      if (!np) return;
       if (npArtistEl) npArtistEl.textContent = np.artist || " ";
       if (npTitleEl)  npTitleEl.textContent  = np.title  || " ";
     }
@@ -181,13 +168,9 @@
         .then(function (res) {
           if (res && res.ok && res.nowPlaying) {
             applyNowPlaying(res.nowPlaying);
-          } else {
-            applyNowPlaying(null);
           }
         })
-        .catch(function () {
-          // en cas d'erreur, on ne casse rien
-        });
+        .catch(function () {});
     }
 
     fetchNowPlayingOnce();
@@ -244,9 +227,6 @@
         if (onairLabelEl) onairLabelEl.textContent = "ON AIR";
         if (ordresBtn) ordresBtn.classList.add("btn-active");
       } else {
-        if (onAirRunning) {
-          onAirFrozenSec = (Date.now() - onAirStart) / 1000;
-        }
         onAirRunning = false;
         if (onairLabelEl) onairLabelEl.textContent = "";
         if (ordresBtn) ordresBtn.classList.remove("btn-active");
@@ -260,7 +240,7 @@
     // Points (60 secondes)
     var DOT_COUNT = 60;
     var DOT_RADIUS = 1.9;
-    var DOT_RING_RADIUS = 80;
+    var DOT_RING_RADIUS = 100;
     var dots = [];
     if (dotsLayer) {
       for (var d = 0; d < DOT_COUNT; d++) {
@@ -288,6 +268,13 @@
       })
       .catch(function () {});
 
+    // Cycle NP local (provisoire)
+    var trackIntro = 10;
+    var trackMain  = 150;
+    var trackOutro = 8;
+    var cycleTotal = trackIntro + trackMain + trackOutro;
+    var cycleStart = Date.now();
+    var npSyncLastSec = null;
     var lastSecond = null;
 
     function updateClock() {
@@ -309,98 +296,52 @@
         lastSecond = sec;
       }
 
-      // Chrono ON AIR
       var chronoSec = onAirRunning ? (Date.now() - onAirStart) / 1000 : onAirFrozenSec;
       if (headerOnAirChrono) headerOnAirChrono.textContent = formatMMSS(chronoSec);
 
-      // ======= GESTION NOW PLAYING (version simple, mais propre) =======
-      var display = "";
+      if (npSyncLastSec === null) {
+        npSyncLastSec = sec;
+      } else {
+        if (npSyncLastSec === 59 && sec === 0) cycleStart = Date.now();
+        npSyncLastSec = sec;
+      }
+
+      var elapsed = (Date.now() - cycleStart) / 1000;
+      var t = elapsed % cycleTotal;
+      var display = "00:00";
       var ringFraction = 0;
+
       var rootStyle = window.getComputedStyle(document.documentElement);
       var ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
       var npTextColor = ringColor;
-      var phaseText = "";
 
-      if (!currentNP) {
-        // Pas de titre en diffusion : on "efface" le NP
+      var tIntroEnd = trackIntro;
+      var tMainEnd  = tIntroEnd + trackMain;
+
+      if (t < tIntroEnd) {
+        var remainIntro = trackIntro - t;
+        display = formatMMSS(remainIntro);
+        ringFraction = t / trackIntro;
+        ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
+        npTextColor = ringColor;
+        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "INTRO";
+      } else if (t < tMainEnd) {
+        var localMain = t - tIntroEnd;
+        var remainMain = trackMain - localMain;
+        display = formatMMSS(remainMain);
+        ringFraction = localMain / trackMain;
+        ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
+        npTextColor = ringColor;
         if (npPhaseLabelEl) npPhaseLabelEl.textContent = "";
-        if (npChronoMainEl) npChronoMainEl.textContent = "";
-        if (npRingProgress) {
-          var R0 = 70;
-          var circ0 = 2 * Math.PI * R0;
-          npRingProgress.style.strokeDasharray = circ0.toFixed(2);
-          npRingProgress.style.strokeDashoffset = circ0.toFixed(2);
-          npRingProgress.style.stroke = ringColor;
-        }
-      } else if (currentNP.receivedAt) {
-        var nowTime = Date.now() + clockOffsetMs;
-        var receivedTime = currentNP.receivedAt;
-        var elapsed = (nowTime - receivedTime) / 1000;
-
-        var duration = (currentNP.durationMs || 0) / 1000;
-        var intro = (currentNP.introMs || 0) / 1000;
-        var outro = (currentNP.outroMs || 0) / 1000;
-
-        if (elapsed < 0) elapsed = 0;
-
-        if (duration > 0) {
-          // Barre : toujours basée sur elapsed / duration (0 à 100%)
-          ringFraction = duration > 0 ? (elapsed / duration) : 0;
-          
-          var remainingSec = duration - elapsed;
-          
-          // Fond orange dans les 5 dernières secondes
-          if (clockBackgroundCircle) {
-            if (remainingSec > 0 && remainingSec <= 5) {
-              clockBackgroundCircle.style.fill = "rgba(255, 159, 10, 0.3)";
-              clockBackgroundCircle.style.stroke = "rgba(255, 159, 10, 0.5)";
-            } else {
-              clockBackgroundCircle.style.fill = "";
-              clockBackgroundCircle.style.stroke = "";
-            }
-          }
-          
-          // INTRO
-          if (intro > 0 && elapsed < intro) {
-            var remainIntro = intro - elapsed;
-            display = formatMMSS(remainIntro);
-            ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
-            npTextColor = ringColor;
-            phaseText = "INTRO";
-          }
-          // OUTRO
-          else if (outro > 0 && elapsed > (duration - outro) && elapsed < duration) {
-            var remainOutro = duration - elapsed;
-            display = formatMMSS(remainOutro);
-            ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
-            npTextColor = ringColor;
-            phaseText = "OUTRO";
-          }
-          // MAIN
-          else if (elapsed < duration) {
-            var remainMain = duration - elapsed;
-            display = formatMMSS(remainMain);
-            ringColor = rootStyle.getPropertyValue("--np-green").trim() || "#23d56b";
-            npTextColor = ringColor;
-            phaseText = "";
-          }
-          // FINI
-          else {
-            display = "";
-            ringFraction = 1;
-            ringColor = rootStyle.getPropertyValue("--text-muted").trim() || "#9c9ca4";
-            npTextColor = ringColor;
-            phaseText = "";
-            // Réinitialiser le fond
-            if (clockBackgroundCircle) {
-              clockBackgroundCircle.style.fill = "";
-              clockBackgroundCircle.style.stroke = "";
-            }
-          }
-        }
+      } else {
+        var localOutro = t - tMainEnd;
+        var remainOutro = trackOutro - localOutro;
+        display = formatMMSS(remainOutro);
+        ringFraction = localOutro / trackOutro;
+        ringColor = rootStyle.getPropertyValue("--np-orange").trim() || "#ff9f0a";
+        npTextColor = ringColor;
+        if (npPhaseLabelEl) npPhaseLabelEl.textContent = "OUTRO";
       }
-
-      if (npPhaseLabelEl) npPhaseLabelEl.textContent = phaseText;
 
       if (npChronoMainEl) {
         npChronoMainEl.textContent = display;
@@ -410,7 +351,7 @@
       if (npRingProgress) {
         if (ringFraction < 0) ringFraction = 0;
         if (ringFraction > 1) ringFraction = 1;
-        var R = 70;
+        var R = 90;
         var circumference = 2 * Math.PI * R;
         var offset = circumference * (1 - ringFraction);
         npRingProgress.style.strokeDasharray = circumference.toFixed(2);
@@ -429,8 +370,6 @@
 
     var topMinimumDuration = 200;
     var topPressedAt = 0;
-
-    var ws = null; // déclaré ici pour être visible par sendTopState
 
     function sendTopState(active) {
       if (ws && ws.readyState === WebSocket.OPEN) {
@@ -452,13 +391,12 @@
         topBtn.classList.add("btn-active");
         updateBackground();
 
-        // Son désactivé
-        // if (topSound && topSound.play) {
-        //   try {
-        //     topSound.currentTime = 0;
-        //     topSound.play().catch(function () {});
-        //   } catch (err) {}
-        // }
+        if (topSound && topSound.play) {
+          try {
+            topSound.currentTime = 0;
+            topSound.play().catch(function () {});
+          } catch (err) {}
+        }
 
         sendTopState(true);
       }
@@ -490,25 +428,6 @@
       window.addEventListener("mouseleave", topEnd, false);
       window.addEventListener("touchend", topEnd, false);
       window.addEventListener("touchcancel", topEnd, false);
-      
-      // Raccourci clavier : flèche haute
-      window.addEventListener("keydown", function(e) {
-        if (e.key === "ArrowUp" || e.keyCode === 38) {
-          if (!topActive) {
-            e.preventDefault();
-            topStart(e);
-          }
-        }
-      }, false);
-      
-      window.addEventListener("keyup", function(e) {
-        if (e.key === "ArrowUp" || e.keyCode === 38) {
-          if (topActive) {
-            e.preventDefault();
-            topEnd(e);
-          }
-        }
-      }, false);
     }
 
     if (ordresBtn) {
@@ -530,20 +449,13 @@
     var chatLastInlineText = byId("chat-last-inline-text");
 
     var messages = [];
+    var ws = null;
 
     function updateLastMessageUI() {
       var last = messages[messages.length - 1];
-      var userSpan = byId("chat-last-user");
-      var textSpan = byId("chat-last-inline-text");
-
-      if (!last) {
-        if (userSpan) userSpan.textContent = "Messagerie :";
-        if (textSpan) textSpan.textContent = "Aucun message";
-        return;
-      }
-      
-      if (userSpan) userSpan.textContent = (last.user || "Inconnu") + " :";
-      if (textSpan) textSpan.textContent = last.text || "";
+      if (!last) return;
+      var txt = last.text || "";
+      if (chatLastInlineText) chatLastInlineText.textContent = txt;
     }
 
     function renderMessages() {
@@ -657,7 +569,7 @@
         ws.send(JSON.stringify({
           type: "hello",
           role: "chat",
-          user: userName
+          user: userName + (userRole ? " (" + userRole + " " + studio + ")" : "")
         }));
       });
 

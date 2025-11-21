@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide - ici Orléans Display</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 40px 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 {
+      font-size: 36px;
+      color: #0078d4;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      color: #999;
+      margin-bottom: 40px;
+      font-size: 16px;
+    }
+    .card {
+      background: #2a2a2a;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border-left: 4px solid #0078d4;
+    }
+    h2 {
+      color: #4a9eff;
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+    h3 {
+      color: #ccc;
+      margin: 20px 0 10px 0;
+      font-size: 18px;
+    }
+    p { margin-bottom: 15px; line-height: 1.6; color: #ccc; }
+    ul { margin: 15px 0 15px 30px; }
+    li { margin-bottom: 10px; color: #ccc; line-height: 1.6; }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #0078d4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      margin: 10px 10px 10px 0;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn:hover {
+      background: #005a9e;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: #444;
+    }
+    .btn-secondary:hover {
+      background: #555;
+    }
+    code {
+      background: #1a1a1a;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #4a9eff;
+      font-family: monospace;
+    }
+    .steps {
+      counter-reset: step;
+    }
+    .step {
+      position: relative;
+      padding-left: 50px;
+      margin-bottom: 25px;
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 35px;
+      height: 35px;
+      background: #0078d4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .alert {
+      background: rgba(255,159,10,0.1);
+      border-left: 3px solid #ff9f0a;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+    .success {
+      background: rgba(45,125,45,0.1);
+      border-left: 3px solid #2d7d2d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 Guide d'utilisation</h1>
+    <p class="subtitle">ici Orléans - Système d'affichage dynamique</p>
+    
+    <div class="card">
+      <h2>🚀 Démarrage rapide</h2>
+      <p>Trois pages principales sont à votre disposition :</p>
+      
+      <a href="event-config.html" class="btn">📅 Créer un événement</a>
+      <a href="test-display.html" class="btn btn-secondary">🧪 Tester l'API</a>
+      <a href="display.html" class="btn btn-secondary">📺 Voir l'affichage</a>
+      
+      <div class="alert success" style="margin-top: 20px;">
+        ✅ <strong>Mode démo activé !</strong> Le système fonctionne avec des données de test en attendant votre token API Radio France.
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>📅 Créer un événement personnalisé</h2>
+      <p>Utilisez la page <code>event-config.html</code> pour créer votre affiche :</p>
+      
+      <div class="steps">
+        <div class="step">
+          <strong>Ouvrir la page de configuration</strong><br>
+          Cliquez sur le bouton "Créer un événement" ci-dessus
+        </div>
+        
+        <div class="step">
+          <strong>Remplir les informations</strong><br>
+          • Titre de l'événement (obligatoire)<br>
+          • Sous-titre / Date et heure<br>
+          • Description détaillée
+        </div>
+        
+        <div class="step">
+          <strong>Ajouter une image</strong><br>
+          • Cliquez sur la zone d'upload ou glissez-déposez<br>
+          • Formats acceptés : JPG, PNG, GIF, WebP<br>
+          • Taille max : 2 Mo<br>
+          • Recommandé : format paysage 16:9 ou carré
+        </div>
+        
+        <div class="step">
+          <strong>Enregistrer et activer</strong><br>
+          Cliquez sur "Enregistrer et activer" → La page display s'ouvrira automatiquement
+        </div>
+      </div>
+      
+      <div class="alert">
+        💡 <strong>Astuce :</strong> Utilisez le bouton "Aperçu" pour voir le rendu avant de valider.
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>🎨 Modes d'affichage disponibles</h2>
+      
+      <h3>1. Mode Émission (par défaut)</h3>
+      <p>Affiche l'émission en cours sur ici Orléans avec :</p>
+      <ul>
+        <li>Titre et animateur</li>
+        <li>Photo de l'émission</li>
+        <li>Barre de progression</li>
+        <li>Animation ken-burns</li>
+      </ul>
+      
+      <h3>2. Mode Événement</h3>
+      <p>Votre affiche personnalisée :</p>
+      <ul>
+        <li>Image custom uploadée</li>
+        <li>Titre, sous-titre, description</li>
+        <li>Idéal pour concerts, événements spéciaux</li>
+      </ul>
+      
+      <h3>3. Mode Now Playing</h3>
+      <p>Morceau musical en cours :</p>
+      <ul>
+        <li>Titre et artiste</li>
+        <li>Effet vinyle tournant</li>
+        <li>Pochette de l'album</li>
+      </ul>
+      
+      <h3>4. Mode Programme</h3>
+      <p>Grille des émissions :</p>
+      <ul>
+        <li>Liste des émissions à venir</li>
+        <li>Horaires et durées</li>
+        <li>Mise à jour automatique</li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <h2>⚙️ Configuration avancée (tech.html)</h2>
+      <p>Pour accéder à toutes les options :</p>
+      
+      <a href="tech.html" class="btn">Ouvrir Tech Config</a>
+      
+      <h3>Dans l'onglet "Display" :</h3>
+      <ul>
+        <li><strong>Token API :</strong> Configurez votre clé Radio France</li>
+        <li><strong>Mode démo :</strong> Activez/désactivez les données de test</li>
+        <li><strong>Sélection du mode :</strong> Changez entre émission/événement/nowplaying/programme</li>
+        <li><strong>Thème :</strong> Sombre ou clair</li>
+        <li><strong>Rotation :</strong> Alternez automatiquement entre les modes</li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <h2>🔑 Obtenir un token API Radio France</h2>
+      
+      <div class="steps">
+        <div class="step">
+          <strong>Créer un compte</strong><br>
+          Rendez-vous sur <a href="https://developers.radiofrance.fr" target="_blank" style="color: #4a9eff;">developers.radiofrance.fr</a>
+        </div>
+        
+        <div class="step">
+          <strong>Créer une application</strong><br>
+          Dans votre tableau de bord, créez une nouvelle application
+        </div>
+        
+        <div class="step">
+          <strong>Copier le token</strong><br>
+          Notez le token (x-token) fourni
+        </div>
+        
+        <div class="step">
+          <strong>Configurer dans tech.html</strong><br>
+          Onglet Display → Coller le token → Enregistrer → Tester API
+        </div>
+      </div>
+      
+      <div class="alert success">
+        ✅ Une fois le token configuré, vous aurez accès aux <strong>vraies données</strong> d'ici Orléans en temps réel !
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>🧪 Tester le système</h2>
+      <p>La page <code>test-display.html</code> vous permet de :</p>
+      <ul>
+        <li>Vérifier l'état du token API</li>
+        <li>Basculer le mode démo</li>
+        <li>Tester les appels API (Station Info, Émission, Programme)</li>
+        <li>Vider le cache</li>
+        <li>Accès rapide aux différentes pages</li>
+      </ul>
+      
+      <a href="test-display.html" class="btn">Ouvrir la page de test</a>
+    </div>
+    
+    <div class="card">
+      <h2>📋 Récapitulatif des pages</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+          <tr style="background: #1a1a1a;">
+            <th style="padding: 12px; text-align: left; color: #4a9eff;">Page</th>
+            <th style="padding: 12px; text-align: left; color: #4a9eff;">Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #444;">
+            <td style="padding: 12px;"><code>event-config.html</code></td>
+            <td style="padding: 12px;">🎯 Configuration événement simplifiée avec upload d'image</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #444;">
+            <td style="padding: 12px;"><code>display.html</code></td>
+            <td style="padding: 12px;">📺 Page d'affichage public (à projeter)</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #444;">
+            <td style="padding: 12px;"><code>tech.html</code></td>
+            <td style="padding: 12px;">⚙️ Configuration technique complète</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #444;">
+            <td style="padding: 12px;"><code>test-display.html</code></td>
+            <td style="padding: 12px;">🧪 Diagnostic et tests API</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #444;">
+            <td style="padding: 12px;"><code>clock.html</code></td>
+            <td style="padding: 12px;">🕐 Horloge principale</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px;"><code>guide.html</code></td>
+            <td style="padding: 12px;">📖 Cette page (guide d'utilisation)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="card" style="text-align: center; border-left-color: #2d7d2d;">
+      <h2 style="color: #4caf50;">✅ Système prêt !</h2>
+      <p style="font-size: 18px;">Commencez par créer votre premier événement 👇</p>
+      <a href="event-config.html" class="btn" style="font-size: 18px; padding: 15px 30px; margin-top: 20px;">
+        📅 Créer mon événement
+      </a>
+    </div>
+  </div>
+</body>
+</html>

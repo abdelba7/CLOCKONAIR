@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration Événement - ici Orléans</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: #2a2a2a;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    h1 {
+      color: #0078d4;
+      margin-bottom: 10px;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .subtitle {
+      color: #999;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #ccc;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    label .required {
+      color: #ff5555;
+      margin-left: 4px;
+    }
+    
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px 15px;
+      background: #1a1a1a;
+      border: 2px solid #444;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 15px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #0078d4;
+    }
+    
+    textarea {
+      resize: vertical;
+      font-family: inherit;
+      min-height: 80px;
+    }
+    
+    .image-upload-zone {
+      border: 2px dashed #444;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      background: #1a1a1a;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .image-upload-zone:hover {
+      border-color: #0078d4;
+      background: #222;
+    }
+    
+    .image-upload-zone.has-image {
+      border-style: solid;
+      border-color: #0078d4;
+    }
+    
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      display: block;
+    }
+    
+    .upload-text {
+      color: #999;
+      font-size: 14px;
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+    
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: none;
+    }
+    
+    .image-preview.active {
+      display: block;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 35px;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      flex: 1;
+      min-width: 150px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: #0078d4;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #005a9e;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0,120,212,0.4);
+    }
+    
+    .btn-secondary {
+      background: #444;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #555;
+    }
+    
+    .btn-danger {
+      background: #d32f2f;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #b71c1c;
+    }
+    
+    .hint {
+      background: rgba(0,120,212,0.1);
+      border-left: 3px solid #0078d4;
+      padding: 12px 15px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #999;
+    }
+    
+    .status-message {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+    
+    .status-message.success {
+      background: rgba(45,125,45,0.2);
+      border: 1px solid #2d7d2d;
+      color: #4caf50;
+    }
+    
+    .status-message.error {
+      background: rgba(211,47,47,0.2);
+      border: 1px solid #d32f2f;
+      color: #ff5555;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .remove-image {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #d32f2f;
+      color: white;
+      border: none;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: none;
+    }
+    
+    .image-upload-zone.has-image .remove-image {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      <span>📅</span>
+      Configuration Événement
+    </h1>
+    <p class="subtitle">Créez votre affiche personnalisée pour la page d'affichage</p>
+    
+    <div id="status-message" class="status-message"></div>
+    
+    <form id="event-form">
+      <div class="form-group">
+        <label for="event-title">
+          Titre de l'événement
+          <span class="required">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="event-title" 
+          placeholder="Ex: Concert de Noël 2025" 
+          required 
+          maxlength="100"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="event-subtitle">Sous-titre / Date et heure</label>
+        <input 
+          type="text" 
+          id="event-subtitle" 
+          placeholder="Ex: Samedi 21 décembre à 20h"
+          maxlength="100"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="event-details">Description</label>
+        <textarea 
+          id="event-details" 
+          placeholder="Ex: Soirée musicale exceptionnelle avec l'orchestre symphonique d'Orléans..."
+          maxlength="500"
+        ></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Image de l'événement (affiche)</label>
+        <div id="image-upload-zone" class="image-upload-zone">
+          <button type="button" class="remove-image" id="remove-image">×</button>
+          <span class="upload-icon">🖼️</span>
+          <p class="upload-text">
+            <strong>Cliquez pour sélectionner</strong> ou glissez-déposez<br>
+            <small>JPG, PNG, GIF ou WebP - Max 2 Mo</small>
+          </p>
+          <img id="image-preview" class="image-preview" alt="Aperçu" />
+          <input type="file" id="image-file" accept="image/*" />
+        </div>
+        <div class="hint">
+          💡 L'image sera convertie et stockée localement. Recommandé: format paysage 16:9 ou carré.
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="switch-interval">⏱️ Bascule automatique API / Événement</label>
+        <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+          <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer;">
+            <input type="checkbox" id="auto-switch-enabled" checked style="width: 20px; height: 20px; cursor: pointer;" />
+            <span style="font-weight: normal;">Activer la bascule automatique</span>
+          </label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+          <label for="switch-interval" style="margin: 0; min-width: 150px;">Intervalle (secondes):</label>
+          <input 
+            type="number" 
+            id="switch-interval" 
+            min="5" 
+            max="120" 
+            step="5" 
+            value="20"
+            style="width: 100px; padding: 8px 12px; background: #1a1a1a; border: 2px solid #444; border-radius: 6px; color: #fff; font-size: 15px;"
+          />
+          <span style="color: #999; font-size: 14px;">(défaut: 20s)</span>
+        </div>
+        <div class="hint">
+          🔄 Alterne automatiquement entre l'affichage API Radio France et votre événement.<br>
+          Si aucun événement n'est configuré, seule l'API sera affichée.
+        </div>
+      </div>
+      
+      <div class="button-group">
+        <button type="submit" class="btn-primary">
+          <span>💾</span>
+          Enregistrer et activer
+        </button>
+        <button type="button" class="btn-secondary" id="preview-btn">
+          <span>👁️</span>
+          Aperçu
+        </button>
+        <button type="button" class="btn-danger" id="clear-btn">
+          <span>🗑️</span>
+          Effacer
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/radiofrance-api.js"></script>
+  <script>
+    const form = document.getElementById('event-form');
+    const titleInput = document.getElementById('event-title');
+    const subtitleInput = document.getElementById('event-subtitle');
+    const detailsInput = document.getElementById('event-details');
+    const imageFile = document.getElementById('image-file');
+    const imageUploadZone = document.getElementById('image-upload-zone');
+    const imagePreview = document.getElementById('image-preview');
+    const removeImageBtn = document.getElementById('remove-image');
+    const previewBtn = document.getElementById('preview-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const statusMessage = document.getElementById('status-message');
+    
+    let currentImageData = '';
+    
+    const autoSwitchEnabled = document.getElementById('auto-switch-enabled');
+    const switchInterval = document.getElementById('switch-interval');
+    
+    // Charger config existante
+    function loadExistingConfig() {
+      try {
+        const config = JSON.parse(localStorage.getItem('display_config') || '{}');
+        titleInput.value = config.eventTitle || '';
+        subtitleInput.value = config.eventSubtitle || '';
+        detailsInput.value = config.eventDetails || '';
+        
+        if (config.eventImage) {
+          currentImageData = config.eventImage;
+          showImagePreview(config.eventImage);
+        }
+        
+        // Charger les paramètres de bascule auto
+        if (autoSwitchEnabled) {
+          autoSwitchEnabled.checked = config.autoSwitchEventEnabled !== false; // true par défaut
+        }
+        if (switchInterval) {
+          switchInterval.value = (config.autoSwitchEventInterval || 20000) / 1000;
+        }
+      } catch (e) {
+        console.error('Erreur chargement config:', e);
+      }
+    }
+    
+    // Gestion upload image
+    imageUploadZone.addEventListener('click', () => {
+      imageFile.click();
+    });
+    
+    imageUploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      imageUploadZone.style.borderColor = '#0078d4';
+    });
+    
+    imageUploadZone.addEventListener('dragleave', () => {
+      imageUploadZone.style.borderColor = '#444';
+    });
+    
+    imageUploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      imageUploadZone.style.borderColor = '#444';
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleImageFile(files[0]);
+      }
+    });
+    
+    imageFile.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleImageFile(e.target.files[0]);
+      }
+    });
+    
+    function handleImageFile(file) {
+      // Vérifications
+      if (file.size > 2 * 1024 * 1024) {
+        showStatus('Image trop volumineuse (max 2 Mo)', 'error');
+        return;
+      }
+      
+      if (!file.type.match(/^image\/(jpeg|jpg|png|gif|webp)/)) {
+        showStatus('Format non supporté. Utilisez JPG, PNG, GIF ou WebP', 'error');
+        return;
+      }
+      
+      // Convertir en Base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        currentImageData = e.target.result;
+        showImagePreview(currentImageData);
+        showStatus('Image chargée avec succès', 'success');
+      };
+      reader.onerror = () => {
+        showStatus('Erreur lors du chargement de l\'image', 'error');
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    function showImagePreview(src) {
+      imagePreview.src = src;
+      imagePreview.classList.add('active');
+      imageUploadZone.classList.add('has-image');
+    }
+    
+    removeImageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentImageData = '';
+      imageFile.value = '';
+      imagePreview.classList.remove('active');
+      imageUploadZone.classList.remove('has-image');
+    });
+    
+    // Sauvegarde
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      if (!titleInput.value.trim()) {
+        showStatus('Le titre est obligatoire', 'error');
+        titleInput.focus();
+        return;
+      }
+      
+      const config = {
+        mode: 'event',
+        theme: 'dark',
+        eventTitle: titleInput.value.trim(),
+        eventSubtitle: subtitleInput.value.trim(),
+        eventDetails: detailsInput.value.trim(),
+        eventImage: currentImageData,
+        stationId: '39',
+        refreshInterval: 30000,
+        rotationEnabled: false,
+        autoSwitchEventEnabled: autoSwitchEnabled ? autoSwitchEnabled.checked : true,
+        autoSwitchEventInterval: switchInterval ? parseInt(switchInterval.value) * 1000 : 20000
+      };
+      
+      try {
+        localStorage.setItem('display_config', JSON.stringify(config));
+        showStatus('✅ Événement enregistré et activé !', 'success');
+        
+        // Ouvrir display après 1s
+        setTimeout(() => {
+          window.open('display.html', '_blank');
+        }, 1000);
+      } catch (e) {
+        showStatus('Erreur lors de l\'enregistrement: ' + e.message, 'error');
+      }
+    });
+    
+    // Aperçu
+    previewBtn.addEventListener('click', () => {
+      if (!titleInput.value.trim()) {
+        showStatus('Entrez au moins un titre pour l\'aperçu', 'error');
+        return;
+      }
+      
+      // Sauvegarder temporairement
+      const config = {
+        mode: 'event',
+        eventTitle: titleInput.value.trim(),
+        eventSubtitle: subtitleInput.value.trim(),
+        eventDetails: detailsInput.value.trim(),
+        eventImage: currentImageData,
+        theme: 'dark',
+        autoSwitchEventEnabled: autoSwitchEnabled ? autoSwitchEnabled.checked : true,
+        autoSwitchEventInterval: switchInterval ? parseInt(switchInterval.value) * 1000 : 20000
+      };
+      localStorage.setItem('display_config', JSON.stringify(config));
+      
+      window.open('display.html', 'EventPreview');
+    });
+    
+    // Effacer
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Effacer tous les champs ?')) {
+        titleInput.value = '';
+        subtitleInput.value = '';
+        detailsInput.value = '';
+        currentImageData = '';
+        imageFile.value = '';
+        imagePreview.classList.remove('active');
+        imageUploadZone.classList.remove('has-image');
+      }
+    });
+    
+    function showStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${type}`;
+      statusMessage.style.display = 'block';
+      
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 5000);
+    }
+    
+    // Charger au démarrage
+    loadExistingConfig();
+    
+    // Activer le mode démo si pas de token
+    if (window.RadioFranceAPI && !window.RadioFranceAPI.hasToken()) {
+      window.RadioFranceAPI.setDemoMode(true);
+    }
+  </script>
+</body>
+</html>

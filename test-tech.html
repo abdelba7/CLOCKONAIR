@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Tech.js</title>
+</head>
+<body>
+  <h1>Test de diagnostic tech.html</h1>
+  <div id="results"></div>
+  
+  <script>
+    const results = document.getElementById('results');
+    
+    function log(msg, color = '#4caf50') {
+      const p = document.createElement('p');
+      p.style.color = color;
+      p.textContent = msg;
+      results.appendChild(p);
+    }
+    
+    // Test 1: Vérifier si tech.js se charge
+    log('✅ Cette page se charge correctement');
+    
+    // Test 2: Vérifier localStorage
+    const config = localStorage.getItem('display_config');
+    if (config) {
+      log('✅ Config trouvée dans localStorage: ' + config.substring(0, 100));
+    } else {
+      log('⚠️ Aucune config dans localStorage', '#ff9800');
+    }
+    
+    // Test 3: Vérifier WebSocket
+    try {
+      const protocol = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(protocol + "://" + location.host + "/ws");
+      
+      ws.addEventListener("open", () => {
+        log('✅ WebSocket connecté');
+        ws.send(JSON.stringify({ type: "hello", role: "test" }));
+      });
+      
+      ws.addEventListener("message", (event) => {
+        log('📨 Message WebSocket reçu: ' + event.data.substring(0, 100));
+      });
+      
+      ws.addEventListener("error", (err) => {
+        log('❌ Erreur WebSocket: ' + err, '#f44336');
+      });
+      
+      ws.addEventListener("close", () => {
+        log('⚠️ WebSocket fermé', '#ff9800');
+      });
+    } catch (err) {
+      log('❌ Impossible de créer WebSocket: ' + err.message, '#f44336');
+    }
+    
+    // Test 4: Vérifier API backend
+    fetch('/api/status')
+      .then(r => r.json())
+      .then(data => {
+        log('✅ API backend répond: ' + JSON.stringify(data).substring(0, 100));
+      })
+      .catch(err => {
+        log('❌ API backend erreur: ' + err.message, '#f44336');
+      });
+  </script>
+</body>
+</html>

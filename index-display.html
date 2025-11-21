@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ici Orléans - Système d'affichage</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      width: 100%;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      background: #0078d4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+      box-shadow: 0 10px 30px rgba(0,120,212,0.3);
+    }
+    
+    h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #0078d4, #4a9eff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      color: #999;
+      font-size: 18px;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: #2a2a2a;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #0078d4, #4a9eff);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: #0078d4;
+      box-shadow: 0 15px 40px rgba(0,120,212,0.3);
+    }
+    
+    .card-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      display: block;
+    }
+    
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    
+    .card-desc {
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .card-link {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #0078d4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .card-link:hover {
+      background: #005a9e;
+    }
+    
+    .card.primary {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #0078d4, #005a9e);
+      border: none;
+    }
+    
+    .card.primary::before {
+      display: none;
+    }
+    
+    .card.primary .card-title {
+      font-size: 24px;
+    }
+    
+    .card.primary .card-desc {
+      color: rgba(255,255,255,0.8);
+      font-size: 16px;
+    }
+    
+    .card.primary .card-link {
+      background: white;
+      color: #0078d4;
+      font-size: 16px;
+      padding: 12px 30px;
+    }
+    
+    .card.primary .card-link:hover {
+      transform: scale(1.05);
+    }
+    
+    .status {
+      text-align: center;
+      padding: 15px;
+      background: rgba(45,125,45,0.2);
+      border: 1px solid #2d7d2d;
+      border-radius: 8px;
+      margin-top: 30px;
+      color: #4caf50;
+    }
+    
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .card.primary {
+        grid-column: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">🎙️</div>
+      <h1>ici Orléans</h1>
+      <p class="subtitle">Système d'affichage dynamique</p>
+    </header>
+    
+    <div class="grid">
+      <div class="card primary">
+        <span class="card-icon">📅</span>
+        <h2 class="card-title">Créer un événement</h2>
+        <p class="card-desc">
+          Interface simplifiée pour créer votre affiche personnalisée.<br>
+          Uploadez une image, ajoutez titre et description.
+        </p>
+        <a href="event-config.html" class="card-link">Commencer →</a>
+      </div>
+      
+      <div class="card">
+        <span class="card-icon">📺</span>
+        <h3 class="card-title">Affichage Public</h3>
+        <p class="card-desc">
+          Page principale à projeter.<br>
+          Affiche émissions, événements ou programme.
+        </p>
+        <a href="display.html" class="card-link">Ouvrir</a>
+      </div>
+      
+      <div class="card">
+        <span class="card-icon">⚙️</span>
+        <h3 class="card-title">Configuration Tech</h3>
+        <p class="card-desc">
+          Paramètres avancés, token API,<br>
+          rotation des modes, thème.
+        </p>
+        <a href="tech.html" class="card-link">Configurer</a>
+      </div>
+      
+      <div class="card">
+        <span class="card-icon">🧪</span>
+        <h3 class="card-title">Tests & Diagnostic</h3>
+        <p class="card-desc">
+          Vérifier l'API, mode démo,<br>
+          voir les données en temps réel.
+        </p>
+        <a href="test-display.html" class="card-link">Tester</a>
+      </div>
+      
+      <div class="card">
+        <span class="card-icon">📖</span>
+        <h3 class="card-title">Guide d'utilisation</h3>
+        <p class="card-desc">
+          Documentation complète,<br>
+          tutoriels et astuces.
+        </p>
+        <a href="guide.html" class="card-link">Lire</a>
+      </div>
+      
+      <div class="card">
+        <span class="card-icon">🕐</span>
+        <h3 class="card-title">Horloge Principale</h3>
+        <p class="card-desc">
+          Clock OnAir avec chronomètre<br>
+          et chat messagerie.
+        </p>
+        <a href="clock.html" class="card-link">Voir</a>
+      </div>
+    </div>
+    
+    <div class="status">
+      ✅ <strong>Mode démo activé</strong> - Le système fonctionne avec des données de test.<br>
+      <small>Configurez votre token API Radio France dans "Configuration Tech" pour les vraies données.</small>
+    </div>
+  </div>
+  
+  <script>
+    // Auto-activer mode démo au premier chargement
+    if (!localStorage.getItem('radiofrance_demo_mode')) {
+      localStorage.setItem('radiofrance_demo_mode', 'true');
+    }
+  </script>
+</body>
+</html>

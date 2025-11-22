@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>CLOCK ON AIR – Accueil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-home">
+<header class="main-header">
+  <div class="logo">
+    <a href="/"><img src="assets/logo-ici.svg" alt="ICI" /></a>
+  </div>
+  <div class="header-title">Accueil – CLOCK ON AIR</div>
+  <div class="header-actions">
+    <button id="chat-toggle" class="btn chat-btn">
+      💬 <span id="chat-users-count">0</span>
+    </button>
+  </div>
+</header>
+
+<div id="last-message" class="last-message-bar">
+  <!-- Dernier message du chat affiché ici -->
+</div>
+
+<main class="main-content">
+  <section class="cards">
+    <a class="card" href="anim.html">
+      <h2>Vue Animateur</h2>
+      <p>Horloge digitale synchronisée + Now Playing + chat.</p>
+    </a>
+    <a class="card" href="tech.html">
+      <h2>Vue Technique</h2>
+      <p>Monitoring NTP, Now Playing, connexions chat.</p>
+    </a>
+  </section>
+</main>
+
+<!-- Panneau de chat global -->
+<aside id="chat-panel" class="chat-panel">
+  <header class="chat-header">
+    <h2>Chat Studio</h2>
+  </header>
+  <ul id="chat-messages" class="chat-messages"></ul>
+  <form id="chat-form" class="chat-form">
+    <input id="chat-input" type="text" placeholder="Votre message…" autocomplete="off">
+    <button type="submit">Envoyer</button>
+  </form>
+</aside>
+
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>CLOCK ON AIR – Technique</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-tech">
+<header class="main-header">
+  <div class="logo">
+    <a href="/"><img src="assets/logo-ici.svg" alt="ICI" /></a>
+  </div>
+  <div class="header-title">Vue Technique</div>
+  <div class="header-actions">
+    <button id="monitoring-toggle" class="btn">
+      Monitoring / Config
+    </button>
+    <button id="chat-toggle" class="btn chat-btn">
+      💬 <span id="chat-users-count">0</span>
+    </button>
+  </div>
+</header>
+
+<div id="last-message" class="last-message-bar"></div>
+
+<main class="main-content anim-layout">
+  <section class="clock-section">
+    <div id="clock" class="digital-clock">--:--:--</div>
+  </section>
+
+  <section class="nowplaying-section">
+    <h2>Now Playing</h2>
+    <div class="nowplaying-line"><span class="label">Titre :</span> <span id="np-title"></span></div>
+    <div class="nowplaying-line"><span class="label">Artiste :</span> <span id="np-artist"></span></div>
+    <div class="nowplaying-line"><span class="label">Album :</span> <span id="np-album"></span></div>
+  </section>
+</main>
+
+<!-- Panneau de monitoring/config réservé à la technique -->
+<aside id="monitoring-panel" class="monitoring-panel">
+  <header class="monitoring-header">
+    <h2>Monitoring & Config</h2>
+  </header>
+  <div class="monitoring-body">
+    <section>
+      <h3>NTP – ptbtime1.ptb.de</h3>
+      <div id="mon-ntp" class="mon-block">Chargement…</div>
+    </section>
+    <section>
+      <h3>Now Playing</h3>
+      <div id="mon-nowplaying" class="mon-block">Chargement…</div>
+    </section>
+    <section>
+      <h3>Chat</h3>
+      <div>Clients connectés : <span id="mon-chat-users">-</span></div>
+    </section>
+  </div>
+</aside>
+
+<!-- Panneau de chat -->
+<aside id="chat-panel" class="chat-panel">
+  <header class="chat-header">
+    <h2>Chat Studio</h2>
+  </header>
+  <ul id="chat-messages" class="chat-messages"></ul>
+  <form id="chat-form" class="chat-form">
+    <input id="chat-input" type="text" placeholder="Votre message…" autocomplete="off">
+    <button type="submit">Envoyer</button>
+  </form>
+</aside>
+
+<script src="js/app.js"></script>
+</body>
+</html>

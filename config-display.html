@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Config Display – CLOCK-ONAIR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- UI de base = look clock/light -->
+  <link rel="stylesheet" href="css/config-display.css" />
+</head>
+<body class="theme-light">
+
+  <header class="cfg-header">
+    <div class="cfg-title">
+      <div class="cfg-badge">CLOCK-ONAIR</div>
+      <h1>Configuration du Display</h1>
+      <p>Tout ce qui est ici est sauvegardé dans <code>localStorage.display_config</code> et appliqué à <code>display.html</code>.</p>
+    </div>
+
+    <div class="cfg-actions">
+      <button id="btn-save" class="btn primary">Enregistrer</button>
+      <button id="btn-reset" class="btn ghost">Réinitialiser</button>
+      <button id="btn-fullscreen-preview" class="btn">Plein écran preview</button>
+    </div>
+  </header>
+
+  <main class="cfg-layout">
+
+    <!-- COLONNE GAUCHE : FORM -->
+    <section class="cfg-panel">
+
+      <!-- GENERAL -->
+      <div class="cfg-card">
+        <h2>Général</h2>
+
+        <div class="row">
+          <label>Thème</label>
+          <select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Mode forcé (si rotation OFF)</label>
+          <select id="mode">
+            <option value="show">Émission en cours</option>
+            <option value="event">Événement</option>
+            <option value="nowplaying">Now playing</option>
+            <option value="schedule">Programme du jour</option>
+            <option value="podcast">Podcast</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Station Radio France</label>
+          <input id="stationId" type="text" placeholder="ici_orleans" />
+        </div>
+
+        <div class="row">
+          <label>Auto-refresh données (ms)</label>
+          <input id="refreshInterval" type="number" min="5000" step="1000" />
+        </div>
+      </div>
+
+      <!-- ROTATION -->
+      <div class="cfg-card">
+        <h2>Rotation des écrans</h2>
+
+        <div class="row switch">
+          <label>Activer rotation</label>
+          <input id="rotationEnabled" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label>Durée par écran (ms)</label>
+          <input id="rotationInterval" type="number" min="5000" step="1000" />
+        </div>
+
+        <div class="row">
+          <label>Ordre des écrans</label>
+          <div class="chips" id="rotationModes">
+            <!-- rempli en JS -->
+          </div>
+          <small class="hint">Clique pour activer/désactiver un écran dans la boucle.</small>
+        </div>
+      </div>
+
+      <!-- AUTO SWITCH EVENT -->
+      <div class="cfg-card">
+        <h2>Auto-switch Événement</h2>
+
+        <div class="row switch">
+          <label>Alterner Show ↔ Event</label>
+          <input id="autoSwitchEventEnabled" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label>Intervalle alternance (ms)</label>
+          <input id="autoSwitchEventInterval" type="number" min="5000" step="1000" />
+        </div>
+      </div>
+
+      <!-- BUMPER -->
+      <div class="cfg-card">
+        <h2>Bumper</h2>
+
+        <div class="row switch">
+          <label>Activer bumper</label>
+          <input id="bumperEnabled" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label>Durée bumper (ms)</label>
+          <input id="bumperDurationMs" type="number" min="1000" step="250" />
+        </div>
+
+        <div class="row">
+          <label>Respiration mini entre bumpers (ms)</label>
+          <input id="bumperMinGapMs" type="number" min="0" step="50" />
+        </div>
+
+        <div class="row switch">
+          <label>Laisser ticker visible pendant bumper</label>
+          <input id="bumperShowTicker" type="checkbox" />
+        </div>
+      </div>
+
+      <!-- TICKER -->
+      <div class="cfg-card">
+        <h2>Ticker</h2>
+
+        <div class="row switch">
+          <label>Activer ticker</label>
+          <input id="tickerEnabled" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label>URL source ticker</label>
+          <input id="tickerUrl" type="text" />
+          <small class="hint">Par défaut : <code>/rss/infos.xml</code></small>
+        </div>
+
+        <div class="row">
+          <label>Refresh ticker (ms)</label>
+          <input id="tickerRefreshMs" type="number" min="2000" step="1000" />
+        </div>
+
+        <div class="row">
+          <label>Vitesse défilement (px/s)</label>
+          <input id="tickerSpeedPxPerSec" type="number" min="20" step="5" />
+        </div>
+
+        <div class="row">
+          <label>Séparateur</label>
+          <input id="tickerSeparator" type="text" placeholder=" • " />
+        </div>
+      </div>
+
+      <!-- METEO -->
+      <div class="cfg-card">
+        <h2>Météo</h2>
+
+        <div class="row switch">
+          <label>Activer widget météo</label>
+          <input id="weatherEnabled" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label>Ville</label>
+          <input id="weatherCity" type="text" placeholder="Orléans" />
+        </div>
+
+        <div class="row two">
+          <div>
+            <label>Latitude</label>
+            <input id="weatherLatitude" type="number" step="0.0001" />
+          </div>
+          <div>
+            <label>Longitude</label>
+            <input id="weatherLongitude" type="number" step="0.0001" />
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Refresh météo (ms)</label>
+          <input id="weatherRefreshMs" type="number" min="60000" step="60000" />
+        </div>
+      </div>
+
+      <!-- CONTENU DEMO -->
+      <div class="cfg-card">
+        <h2>Contenu manuel / démo</h2>
+        <p class="hint">Ces champs permettent d’écraser les écrans si l’API/RSS ne renvoie rien.</p>
+
+        <h3>Événement</h3>
+        <div class="row">
+          <label>Titre événement</label>
+          <input id="eventTitle" type="text" />
+        </div>
+        <div class="row">
+          <label>Sous-titre</label>
+          <input id="eventSubtitle" type="text" />
+        </div>
+        <div class="row">
+          <label>Détails</label>
+          <textarea id="eventDetails" rows="3"></textarea>
+        </div>
+        <div class="row">
+          <label>Image (upload ou URL)</label>
+          <div class="drop" id="eventImageDrop">
+            <input id="eventImageFile" type="file" accept="image/*" />
+            <input id="eventImage" type="text" placeholder="https://..." />
+            <span>Glisser déposer une image ou cliquer</span>
+          </div>
+        </div>
+
+        <hr/>
+
+        <h3>Now playing (démo)</h3>
+        <div class="row">
+          <label>Titre station</label>
+          <input id="npStationTitle" type="text" placeholder="ici Orléans" />
+        </div>
+        <div class="row">
+          <label>Baseline</label>
+          <input id="npBaseline" type="text" placeholder="Actu locale, musique et bonne humeur" />
+        </div>
+
+        <hr/>
+
+        <h3>Programme du jour (démo)</h3>
+        <div class="row">
+          <label>Liste (1 ligne = 1 émission)</label>
+          <textarea id="scheduleDemo" rows="5"
+            placeholder="06:00 - 09:00 Ici Matin&#10;09:00 - 10:00 Les invités&#10;10:00 - 12:00 Musique locale"></textarea>
+          <small class="hint">Tu peux ajouter/retirer des lignes librement.</small>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- COLONNE DROITE : PREVIEW -->
+    <aside class="cfg-preview">
+      <div class="preview-card">
+        <div class="preview-header">
+          <h2>Preview display</h2>
+          <div class="preview-actions">
+            <button id="btn-reload-preview" class="btn small">Recharger preview</button>
+            <button id="btn-open-display" class="btn small">Ouvrir display</button>
+          </div>
+        </div>
+        <iframe id="previewFrame" src="display.html" title="Preview display"></iframe>
+      </div>
+    </aside>
+
+  </main>
+
+  <script src="js/config-display.js"></script>
+</body>
+</html>

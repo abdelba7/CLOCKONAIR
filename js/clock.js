@@ -407,6 +407,16 @@
         npChronoMainEl.style.color = npTextColor;
       }
 
+      // Afficher la durée de l'outro en dessous du chrono NP
+      var npOutroDurationEl = document.getElementById("np-outro-duration");
+      if (npOutroDurationEl) {
+        if (outro > 0) {
+          npOutroDurationEl.innerHTML = '<span class="label">outro</span>' + formatMMSS(outro);
+        } else {
+          npOutroDurationEl.textContent = "";
+        }
+      }
+
       if (npRingProgress) {
         if (ringFraction < 0) ringFraction = 0;
         if (ringFraction > 1) ringFraction = 1;
@@ -433,19 +443,30 @@
     var ws = null; // déclaré ici pour être visible par sendTopState
 
     function sendTopState(active) {
+      console.log("[TOP] sendTopState appelé:", active, "ws:", ws ? ws.readyState : "null");
       if (ws && ws.readyState === WebSocket.OPEN) {
         try {
-          ws.send(JSON.stringify({
+          var msg = {
             type: "top",
             studio: studio,
-            active: !!active
-          }));
-        } catch (e) {}
+            active: !!active,
+            fromUser: userName
+          };
+          console.log("[TOP] Envoi message:", msg);
+          ws.send(JSON.stringify(msg));
+        } catch (e) {
+          console.error("[TOP] Erreur envoi:", e);
+        }
+      } else {
+        console.warn("[TOP] WebSocket non disponible");
       }
     }
 
     if (topBtn) {
+      console.log("[TOP] Bouton TOP trouvé, attachement des événements");
+      
       function topStart(e) {
+        console.log("[TOP] topStart appelé");
         if (e && e.preventDefault) e.preventDefault();
         topPressedAt = Date.now();
         topActive = true;
@@ -464,6 +485,7 @@
       }
 
       function topEnd(e) {
+        console.log("[TOP] topEnd appelé, topActive:", topActive);
         if (!topActive) return;
         if (e && e.preventDefault) e.preventDefault();
 
@@ -471,6 +493,7 @@
         var remaining = topMinimumDuration - elapsed;
 
         function finalize() {
+          console.log("[TOP] finalize - désactivation");
           topActive = false;
           topBtn.classList.remove("btn-active");
           updateBackground();
@@ -511,11 +534,81 @@
       }, false);
     }
 
+    /* ORDRES BUTTON (Maintien/Relâché - avec canal configurable) */
+
+    var ordresActive = false;
+
+    // Charger l'état de la config ORDRES depuis localStorage
+    var ordresEnabled = localStorage.getItem("ordres-enabled") !== "false";
+    var ordresChannel = parseInt(localStorage.getItem("ordres-channel") || "1");
+    
     if (ordresBtn) {
-      ordresBtn.addEventListener("click", function (e) {
-        if (e && e.preventDefault) e.preventDefault();
-        setOnAirState(!simOnAir);
-      });
+      ordresBtn.style.display = ordresEnabled ? "" : "none";
+    }
+
+    function sendOrdres(active) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.warn("WebSocket not connected for ORDRES");
+        return;
+      }
+
+      ws.send(JSON.stringify({
+        type: "ordres",
+        channel: ordresChannel,
+        active: active
+      }));
+
+      console.log("ORDRES CH" + ordresChannel + " -> " + (active ? "ON" : "OFF"));
+    }
+
+    function ordresActivate(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (ordresActive) return;
+
+      ordresActive = true;
+      if (ordresBtn) ordresBtn.classList.add("btn-active");
+      sendOrdres(true);
+    }
+
+    function ordresDeactivate(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (!ordresActive) return;
+
+      ordresActive = false;
+      if (ordresBtn) ordresBtn.classList.remove("btn-active");
+      sendOrdres(false);
+    }
+
+    if (ordresBtn) {
+      // Desktop: mousedown/mouseup
+      ordresBtn.addEventListener("mousedown", ordresActivate, false);
+      window.addEventListener("mouseup", function(e) {
+        if (ordresActive) ordresDeactivate(e);
+      }, false);
+
+      // Mobile: touchstart/touchend
+      ordresBtn.addEventListener("touchstart", ordresActivate, false);
+      window.addEventListener("touchend", function(e) {
+        if (ordresActive) ordresDeactivate(e);
+      }, false);
+      window.addEventListener("touchcancel", function(e) {
+        if (ordresActive) ordresDeactivate(e);
+      }, false);
+
+      // Keyboard shortcut: Espace
+      window.addEventListener("keydown", function(e) {
+        if ((e.key === " " || e.keyCode === 32) && !ordresActive) {
+          e.preventDefault();
+          ordresActivate(e);
+        }
+      }, false);
+
+      window.addEventListener("keyup", function(e) {
+        if ((e.key === " " || e.keyCode === 32) && ordresActive) {
+          e.preventDefault();
+          ordresDeactivate(e);
+        }
+      }, false);
     }
 
     /* CHAT / WEBSOCKET */
@@ -688,15 +781,66 @@
           applyNowPlaying(data.nowPlaying);
         }
 
+        // Configuration ORDRES reçue
+        if (data.type === "config" && data.config === "ordres") {
+          var enabled = !!data.enabled;
+          var channel = parseInt(data.channel || "1");
+          
+          localStorage.setItem("ordres-enabled", enabled);
+          localStorage.setItem("ordres-channel", channel);
+          
+          ordresChannel = channel;
+          
+          if (ordresBtn) {
+            ordresBtn.style.display = enabled ? "" : "none";
+          }
+          
+          console.log("[CONFIG] ORDRES " + (enabled ? "activé" : "désactivé") + " - CH" + channel);
+        }
+
         // TOP global reçu
         if (data.type === "top") {
-          if (data.studio && data.studio !== studio) return;
+          console.log("[TOP] Message reçu:", data);
+          console.log("[TOP] Studio check:", data.studio, "vs", studio);
+          
+          if (data.studio && data.studio !== studio) {
+            console.log("[TOP] Studio différent, ignoré");
+            return;
+          }
+          
+          var wasActive = topActive;
           topActive = !!data.active;
+          
+          console.log("[TOP] wasActive:", wasActive, "-> topActive:", topActive);
+          console.log("[TOP] fromUser:", data.fromUser, "userName:", userName);
+          
           if (topBtn) {
             if (topActive) topBtn.classList.add("btn-active");
             else topBtn.classList.remove("btn-active");
           }
           updateBackground();
+          
+          // Son de notification pour les autres clients (pas celui qui a pressé)
+          if (!wasActive && topActive && data.fromUser !== userName) {
+            console.log("[TOP] Playing notification sound");
+            try {
+              var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+              var oscillator = audioCtx.createOscillator();
+              var gainNode = audioCtx.createGain();
+              oscillator.connect(gainNode);
+              gainNode.connect(audioCtx.destination);
+              oscillator.frequency.value = 800;
+              oscillator.type = 'sine';
+              gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+              oscillator.start(audioCtx.currentTime);
+              oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch(e) {
+              console.error("[TOP] Sound error:", e);
+            }
+          } else {
+            console.log("[TOP] Sound skipped:", {wasActive, topActive, fromUser: data.fromUser, userName});
+          }
         }
       });
 

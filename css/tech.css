@@ -6,8 +6,8 @@
 }
 
 .icon-button {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 1px solid var(--border-subtle);
   background: radial-gradient(circle at top, rgba(255,255,255,0.12), rgba(0,0,0,0.65));
@@ -16,7 +16,7 @@
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
   transition: transform 0.08s ease-out,
               box-shadow 0.12s ease-out,
               background 0.12s ease-out,
@@ -187,6 +187,67 @@
   color: var(--text-muted);
   opacity: 0.85;
   margin-top: 6px;
+}
+
+/* Toggle Switch for Config */
+.config-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.config-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.config-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: 0.3s;
+  border-radius: 26px;
+  border: 1px solid var(--border-subtle);
+}
+
+.config-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-muted);
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.config-switch input:checked + .config-slider {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.config-switch input:checked + .config-slider:before {
+  transform: translateX(24px);
+  background-color: white;
+}
+
+body.theme-light .config-slider {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+body.theme-light .config-slider:before {
+  background-color: #666;
+}
+
+body.theme-light .config-switch input:checked + .config-slider:before {
+  background-color: white;
 }
 
 /* NP simulator layout */
@@ -374,4 +435,15 @@ body.theme-light .np-sim-input {
 body.theme-light .mini-btn,
 body.theme-light .player-btn {
   background: rgba(255,255,255,0.9);
+}
+
+#display-theme-select,
+#display-rotation-interval,
+#display-podcast-url,
+#display-bumper-duration {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: #fff;
+  font-size: 0.9rem;
 }

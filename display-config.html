@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Display Config – CLOCK-ONAIR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/display-config.css">
+</head>
+<body class="theme-light">
+
+  <!-- Header style clock -->
+  <header class="cfg-header">
+    <div class="cfg-brand">
+      <div class="cfg-dot"></div>
+      <h1>Display Config</h1>
+    </div>
+
+    <div class="cfg-actions">
+      <button id="btn-add-screen" class="btn primary">+ Ajouter écran</button>
+      <button id="btn-open-display" class="btn ghost">Ouvrir Display</button>
+      <button id="btn-save-all" class="btn primary">Enregistrer</button>
+    </div>
+  </header>
+
+  <main class="cfg-body">
+
+    <!-- GLOBAL -->
+    <section class="panel">
+      <h2>Réglages globaux</h2>
+
+      <div class="grid">
+        <label>Thème display
+          <select id="g-theme">
+            <option value="light">Clair</option>
+            <option value="dark">Sombre</option>
+          </select>
+        </label>
+
+        <label><input type="checkbox" id="g-bumper-enabled"> Bumper activé</label>
+        <label>Durée bumper (ms)
+          <input type="number" id="g-bumper-duration" min="2000" step="500">
+        </label>
+
+        <label><input type="checkbox" id="g-ticker-enabled"> Ticker activé</label>
+        <label>Source ticker
+          <select id="g-ticker-source">
+            <option value="txt">Fichier txt</option>
+            <option value="rss">Flux RSS</option>
+          </select>
+        </label>
+        <label>URL txt
+          <input type="text" id="g-ticker-txt-url">
+        </label>
+        <label>URL RSS
+          <input type="text" id="g-ticker-rss-url">
+        </label>
+
+        <label><input type="checkbox" id="g-weather-enabled"> Météo activée</label>
+        <label>Ville météo
+          <input type="text" id="g-weather-city">
+        </label>
+        <label>Lat
+          <input type="number" id="g-weather-lat" step="0.0001">
+        </label>
+        <label>Lon
+          <input type="number" id="g-weather-lon" step="0.0001">
+        </label>
+      </div>
+    </section>
+
+    <!-- SCREENS LIST -->
+    <section class="panel">
+      <h2>Écrans dans la rotation</h2>
+      <div id="screens-list" class="screens-list"></div>
+    </section>
+
+  </main>
+
+  <!-- Template écran -->
+  <template id="screen-template">
+    <div class="screen-card" data-id="">
+      <div class="screen-row">
+        <input class="scr-enabled" type="checkbox">
+        <strong class="scr-title">Écran</strong>
+        <div class="spacer"></div>
+        <button class="btn tiny scr-preview">👁 Preview</button>
+	<button class="btn tiny scr-up">↑</button>
+        <button class="btn tiny scr-down">↓</button>
+        <button class="btn tiny danger scr-del">Suppr.</button>
+      </div>
+
+      <div class="grid">
+        <label>Type
+          <select class="scr-type">
+            <option value="show">Émission en cours (API)</option>
+            <option value="event">Événement (manuel)</option>
+            <option value="nowplaying">Now Playing (API)</option>
+            <option value="schedule">Programme du jour (API)</option>
+            <option value="podcast">Podcast (RSS)</option>
+            <option value="rss">Écran RSS générique</option>
+            <option value="manual">Écran manuel libre</option>
+	    <option value="fullscreen">Plein écran (image)</option>
+          </select>
+        </label>
+
+        <label>Durée (ms)
+          <input class="scr-duration" type="number" min="5000" step="1000">
+        </label>
+
+        <label>Source
+          <select class="scr-source-kind">
+            <option value="radiofrance">RadioFrance API</option>
+            <option value="rss">RSS</option>
+            <option value="manual">Manuel</option>
+          </select>
+        </label>
+
+        <label class="scr-station-wrap">StationId API
+          <input class="scr-station" type="text" placeholder="ici_orleans">
+        </label>
+
+        <label class="scr-rss-wrap">URL RSS
+          <input class="scr-rss" type="text" placeholder="/rss/...">
+        </label>
+
+        <label class="scr-manual-title-wrap">Titre
+          <input class="scr-manual-title" type="text">
+        </label>
+        <label class="scr-manual-subtitle-wrap">Sous-titre
+          <input class="scr-manual-subtitle" type="text">
+        </label>
+        <label class="scr-manual-text-wrap">Texte
+          <textarea class="scr-manual-text" rows="3"></textarea>
+        </label>
+        <label class="scr-manual-image-wrap">Image (URL ou base64)
+          <input class="scr-manual-image" type="text">
+        </label>
+      </div>
+    </div>
+  </template>
+
+  <script src="js/display-config.js"></script>
+</body>
+</html>

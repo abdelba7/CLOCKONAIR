@@ -1,0 +1,60 @@
+:root{
+  --bg: #f7f9ff;
+  --panel: rgba(255,255,255,0.9);
+  --line: rgba(0,0,0,0.06);
+  --accent: #0064f5;
+  --accent2:#001ed2;
+  --text:#0b1533;
+}
+
+body{
+  margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: radial-gradient(1200px circle at 20% -10%, #e9f0ff, transparent),
+              radial-gradient(900px circle at 110% 0%, #eef6ff, transparent),
+              linear-gradient(180deg, #f9fbff, #eef3ff);
+  color:var(--text);
+}
+
+.cfg-header{
+  position:sticky; top:0; z-index:5;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; background:var(--panel); backdrop-filter: blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.cfg-brand{display:flex;align-items:center;gap:10px;}
+.cfg-dot{width:12px;height:12px;border-radius:50%;background:var(--accent);}
+.cfg-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+.cfg-body{padding:18px; display:grid; gap:16px; max-width:1200px; margin:0 auto;}
+.panel{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:14px; padding:14px;
+  box-shadow:0 10px 24px rgba(0,0,0,0.05);
+}
+.panel h2{margin:0 0 12px; font-size:1.4rem;}
+
+.grid{
+  display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap:10px 14px; align-items:end;
+}
+label{display:flex; flex-direction:column; gap:6px; font-weight:700; font-size:.95rem;}
+input,select,textarea{
+  padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+  background:white; font-size:1rem;
+}
+
+.btn{
+  border:1px solid var(--line); background:white; padding:8px 12px;
+  border-radius:10px; font-weight:800; cursor:pointer;
+}
+.btn.primary{background:var(--accent); color:white; border-color:transparent;}
+.btn.ghost{background:transparent;}
+.btn.tiny{padding:4px 8px;border-radius:8px;font-size:.85rem;}
+.btn.danger{background:#ff5b5b;color:white;border-color:transparent;}
+
+.screens-list{display:grid;gap:10px;}
+.screen-card{
+  border:1px solid var(--line); background:white; border-radius:12px; padding:10px;
+}
+.screen-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.spacer{flex:1;}

@@ -1,9 +1,12 @@
 /**
- * DISPLAY.JS
- * - Logo bumper ENTRE chaque écran
- * - Rotation / autoSwitch passent par showBumperThen()
- * - Ticker + météo conservés
- * - FIX: reset animation bumper à chaque apparition (logo visible tout le temps)
+ * DISPLAY.JS (LOCKED STABLE + bumper moderne)
+ * - Bumper 100% opaque entre chaque écran
+ * - Option : ticker visible/caché pendant bumper
+ * - Rotation par écrans et durées personnalisées
+ * - Ticker TXT ou RSS propre (sans balises, limité)
+ * - Podcast RSS en rotation + image
+ * - Anti-veille (Wake Lock)
+ * - Météo Open-Meteo conservée
  */
 
 (function(){
@@ -11,24 +14,30 @@
 
   const mainContainer = document.getElementById("display-main");
   const bumperEl = document.getElementById("bumper-overlay");
-  const tickerFooter = document.getElementById("display-ticker");
+  const tickerFooter = document.querySelector(".display-ticker");
 
+  // ---------------- CONFIG DEFAULT ----------------
   let config = {
     mode: "show",
-    stationId: RadioFranceAPI?.STATIONS?.ici_orleans || "ici_orleans",
+    stationId: (window.RadioFranceAPI?.STATIONS?.ici_orleans) || "ici_orleans",
     refreshInterval: 30000,
     theme: "light",
 
+    // Event manuel
     eventImage: "",
     eventTitle: "",
     eventSubtitle: "",
     eventDetails: "",
 
-    rotationEnabled: false,
-    rotationInterval: 60000,
-    rotationModes: ["show","event","nowplaying","schedule","podcast"],
+    // Rotation par écrans
+    rotationEnabled: true,
+    screens: [
+      { mode:"show",      durationMs: 60000 },
+      { mode:"podcast",   durationMs: 60000 },
+      { mode:"schedule",  durationMs: 60000 }
+    ],
 
-    autoSwitchEventEnabled: true,
+    autoSwitchEventEnabled: false,
     autoSwitchEventInterval: 20000,
 
     // ===== BUMPER =====
@@ -36,15 +45,20 @@
     bumperDurationMs: 6000,
     bumperMinGapMs: 300,
 
-    // Afficher le ticker pendant bumper
-    bumperShowTicker: true,
+    // Ticker visible pendant bumper ?
+    tickerVisibleDuringBumper: true,
 
     // ===== TICKER =====
     tickerEnabled: true,
-    tickerUrl: "/rss/infos.xml", // flux par défaut
+    tickerUrl: "/rss/infos.xml",
     tickerRefreshMs: 15000,
-    tickerSeparator: " ",        // on laisse l'espace, le SVG est déjà dans le HTML du ticker
+    tickerSeparator: " • ",
     tickerSpeedPxPerSec: 90,
+
+    // ===== PODCAST =====
+    podcastEnabled: true,
+    podcastUrl: "/rss/podcast09/podcast_01bcfbf6-efda-44c7-88f4-300aafef9039.xml",
+    podcastMaxItems: 6,
 
     // ===== METEO =====
     weatherEnabled: true,
@@ -63,21 +77,31 @@
   let inBumper = false;
   let bumperCooldown = 0;
 
+  // Rotation par screens
+  let screenIndex = 0;
+
+  // ---------------- CONFIG LOAD/SAVE ----------------
   function loadConfig(){
     const saved = localStorage.getItem("display_config");
     if(saved){
-      try{ config = { ...config, ...JSON.parse(saved) }; }
-      catch(e){ console.error("Config invalid:", e); }
+      try{
+        const incoming = JSON.parse(saved);
+        config = { ...config, ...incoming };
+
+        if(Array.isArray(incoming.screens)){
+          config.screens = incoming.screens
+            .filter(s => s && s.mode)
+            .map(s => ({
+              mode: s.mode,
+              durationMs: Number(s.durationMs||60000)
+            }));
+        }
+      }catch(e){ console.error("Config invalid:", e); }
     }
 
     document.body.className = `theme-${config.theme}`;
 
-    // ticker visible/caché pendant bumper
-    if (tickerFooter) {
-      tickerFooter.classList.toggle("hide-during-bumper", !config.bumperShowTicker);
-    }
-
-    if(!RadioFranceAPI.hasToken()){
+    if(window.RadioFranceAPI && !RadioFranceAPI.hasToken()){
       RadioFranceAPI.setDemoMode(true);
     }
   }
@@ -90,12 +114,7 @@
     config = { ...config, ...newConfig };
     saveConfig();
     document.body.className = `theme-${config.theme}`;
-
-    if (tickerFooter) {
-      tickerFooter.classList.toggle("hide-during-bumper", !config.bumperShowTicker);
-    }
-
-    restartTimers();
+    restartTimers(true);
     render();
   };
 
@@ -105,33 +124,52 @@
         const incoming = JSON.parse(e.newValue || "{}");
         config = { ...config, ...incoming };
         document.body.className = `theme-${config.theme}`;
-
-        if (tickerFooter) {
-          tickerFooter.classList.toggle("hide-during-bumper", !config.bumperShowTicker);
-        }
-
-        restartTimers();
+        restartTimers(true);
         render();
       }catch(_){}
     }
   });
 
-  // ================== BUMPER ==================
-  function resetBumperAnimation(){
-    if(!bumperEl) return;
+  // ---------------- ANTI-VEILLE ----------------
+  let wakeLock = null;
+  async function requestWakeLock(){
+    try{
+      if("wakeLock" in navigator){
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", ()=>{ wakeLock=null; });
+      }
+    }catch(e){
+      console.warn("WakeLock denied:", e);
+    }
+  }
+  function installWakeLockFallback(){
+    setInterval(()=>{
+      try{
+        window.dispatchEvent(new Event("mousemove"));
+        window.dispatchEvent(new Event("touchstart"));
+      }catch(_){}
+    }, 25000);
+  }
 
-    // 1) remet l’état “hors show”
-    bumperEl.classList.remove("show");
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState === "visible"){
+      requestWakeLock();
+    }
+  });
 
-    // 2) force reflow pour réinitialiser toutes les animations CSS
-    void bumperEl.offsetWidth;
-
-    // 3) remet show juste après => animations repartent
-    bumperEl.classList.add("show");
+  // ---------------- BUMPER ----------------
+  function setTickerVisibilityDuringBumper(isVisible){
+    if(!tickerFooter) return;
+    if(isVisible){
+      tickerFooter.style.opacity = "1";
+      tickerFooter.style.pointerEvents = "auto";
+    }else{
+      tickerFooter.style.opacity = "0";
+      tickerFooter.style.pointerEvents = "none";
+    }
   }
 
   function showBumperThen(nextMode){
-    // évite bumper si désactivé ou si déjà en cours
     if(!config.bumperEnabled || inBumper || Date.now() < bumperCooldown){
       config.mode = nextMode;
       currentDisplayMode = nextMode;
@@ -140,11 +178,21 @@
 
     inBumper = true;
 
-    // reset animation + show
-    resetBumperAnimation();
+    // cache ticker si demandé
+    if(!config.tickerVisibleDuringBumper){
+      setTickerVisibilityDuringBumper(false);
+    }
 
-    // la CSS utilise --bumper-exit-delay pour caler les sorties
-    bumperEl?.style.setProperty("--bumper-exit-delay", (config.bumperDurationMs/1000 - 0.8) + "s");
+    // coupe l'écran en dessous pendant le bumper
+    if(mainContainer){
+      mainContainer.style.opacity = "0";
+      mainContainer.innerHTML = "";
+    }
+
+    bumperEl?.classList.add("show");
+    bumperEl?.style.setProperty("--bumper-exit-delay",
+      (config.bumperDurationMs/1000 - 0.6) + "s"
+    );
 
     setTimeout(()=>{
       bumperEl?.classList.remove("show");
@@ -156,11 +204,17 @@
 
         inBumper = false;
         bumperCooldown = Date.now() + config.bumperMinGapMs;
-      }, 280);
+
+        // ré-affiche ticker si caché
+        if(!config.tickerVisibleDuringBumper){
+          setTickerVisibilityDuringBumper(true);
+        }
+      }, 260);
+
     }, config.bumperDurationMs);
   }
 
-  // ================== RENDUS ==================
+  // ---------------- RENDUS ----------------
   async function renderShowMode(){
     const show = await RadioFranceAPI.getCurrentShow(config.stationId);
     if(!show){
@@ -183,7 +237,7 @@
     mainContainer.innerHTML = `
       <div class="mode-show" style="display:flex;gap:18px;align-items:center;max-width:1400px;width:100%;">
         <div style="flex:0 0 38%;position:relative;">
-          <img src="${visualSrc}" alt="${show.title}" 
+          <img src="${visualSrc}" alt="${show.title}"
                style="width:100%;border-radius:18px;box-shadow:0 14px 35px rgba(0,0,0,0.18);object-fit:cover;aspect-ratio:1/1;"
                onerror="this.style.display='none'"/>
         </div>
@@ -204,7 +258,8 @@
 
   function renderEventMode(){
     const img = config.eventImage
-      ? `<img src="${config.eventImage}" alt="${config.eventTitle}" style="width:min(42vw,520px);border-radius:18px;box-shadow:0 14px 35px rgba(0,0,0,0.18);object-fit:cover;aspect-ratio:16/9;"/>`
+      ? `<img src="${config.eventImage}" alt="${config.eventTitle}"
+              style="width:min(42vw,520px);border-radius:18px;box-shadow:0 14px 35px rgba(0,0,0,0.18);object-fit:cover;aspect-ratio:16/9;"/>`
       : "";
 
     mainContainer.innerHTML = `
@@ -265,8 +320,76 @@
       </div>`;
   }
 
+  function stripHtml(s){
+    return (s||"")
+      .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1")
+      .replace(/<[^>]+>/g," ")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  async function renderPodcastMode(){
+    if(!config.podcastEnabled){
+      await renderShowMode();
+      return;
+    }
+
+    try{
+      const res = await fetch(config.podcastUrl,{cache:"no-store"});
+      if(!res.ok) throw new Error("HTTP "+res.status);
+
+      const xmlText = await res.text();
+      const doc = new DOMParser().parseFromString(xmlText,"text/xml");
+      const items = Array.from(doc.querySelectorAll("item")).slice(0, config.podcastMaxItems || 6);
+
+      if(!items.length){
+        mainContainer.innerHTML = `<div style="font-size:2rem;font-weight:800;">Podcast indisponible</div>`;
+        return;
+      }
+
+      const first = items[0];
+      const title = (first.querySelector("title")?.textContent||"Podcast").trim();
+      const descRaw = (first.querySelector("description")?.textContent||"").trim();
+      const desc = stripHtml(descRaw).slice(0,220);
+
+      let img =
+        first.querySelector("itunes\\:image")?.getAttribute("href") ||
+        first.querySelector("image > url")?.textContent ||
+        "";
+
+      mainContainer.innerHTML = `
+        <div class="mode-podcast" style="display:flex;gap:18px;align-items:center;max-width:1400px;width:100%;">
+          <div style="flex:0 0 38%;">
+            ${img ? `
+              <img src="${img}" alt="${title}"
+                   style="width:100%;border-radius:18px;box-shadow:0 14px 35px rgba(0,0,0,0.18);object-fit:cover;aspect-ratio:1/1;"
+                   onerror="this.style.display='none'"/>` : `
+              <div style="width:100%;aspect-ratio:1/1;border-radius:18px;background:rgba(255,255,255,0.9);
+                          display:flex;align-items:center;justify-content:center;font-size:5rem;box-shadow:0 14px 35px rgba(0,0,0,0.18);">🎙️</div>`
+            }
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:800;color:#001ed2;letter-spacing:.12em;text-transform:uppercase;">Podcast</div>
+            <h1 style="margin:.25em 0;font-size:clamp(2.2rem,3.6vw,3.2rem);font-weight:900;">${title}</h1>
+            ${desc ? `<div style="font-size:1.15rem;color:rgba(11,21,51,0.85);max-width:900px;">${desc}…</div>` : ""}
+            <div style="margin-top:16px;font-weight:900;font-size:1.2rem;">Derniers épisodes</div>
+            <ul style="margin:8px 0 0;padding-left:18px;font-size:1.1rem;line-height:1.5;">
+              ${items.map(it=>{
+                const t=(it.querySelector("title")?.textContent||"").trim();
+                return `<li>${escapeHtml(t)}</li>`;
+              }).join("")}
+            </ul>
+          </div>
+        </div>`;
+    }catch(e){
+      mainContainer.innerHTML = `<div style="font-size:2rem;font-weight:800;">Flux podcast indisponible</div>`;
+    }
+  }
+
   async function render(){
+    if(!mainContainer) return;
     mainContainer.style.opacity="0";
+
     setTimeout(async ()=>{
       const modeToRender = (config.autoSwitchEventEnabled && hasEventConfigured())
         ? currentDisplayMode
@@ -276,6 +399,7 @@
       else if(modeToRender==="event") renderEventMode();
       else if(modeToRender==="nowplaying") await renderNowPlayingMode();
       else if(modeToRender==="schedule") await renderScheduleMode();
+      else if(modeToRender==="podcast") await renderPodcastMode();
       else await renderShowMode();
 
       setTimeout(()=> mainContainer.style.opacity="1", 50);
@@ -286,25 +410,35 @@
     return !!(config.eventTitle && config.eventTitle.trim());
   }
 
-  // ================== ROTATION + AUTO SWITCH avec bumper ==================
-  let rotationIndex=0;
-
+  // ---------------- ROTATION ----------------
   function startRotation(){
-    if(!config.rotationEnabled || !config.rotationModes.length) return;
+    if(!config.rotationEnabled || !Array.isArray(config.screens) || !config.screens.length) return;
     stopRotation();
 
-    rotationTimer=setInterval(()=>{
-      rotationIndex = (rotationIndex+1) % config.rotationModes.length;
-      const nextMode = config.rotationModes[rotationIndex];
-      showBumperThen(nextMode);
-    }, config.rotationInterval);
+    screenIndex = Math.min(screenIndex, config.screens.length-1);
+    scheduleNextScreen();
+  }
+
+  function scheduleNextScreen(){
+    stopRotation();
+
+    const current = config.screens[screenIndex];
+    const duration = Math.max(5000, Number(current.durationMs||60000));
+
+    rotationTimer = setTimeout(()=>{
+      screenIndex = (screenIndex + 1) % config.screens.length;
+      const next = config.screens[screenIndex];
+      showBumperThen(next.mode);
+      scheduleNextScreen();
+    }, duration);
   }
 
   function stopRotation(){
-    if(rotationTimer) clearInterval(rotationTimer);
+    if(rotationTimer) clearTimeout(rotationTimer);
     rotationTimer=null;
   }
 
+  // ---------------- AUTO SWITCH show/event ----------------
   function startAutoSwitch(){
     stopAutoSwitch();
 
@@ -339,7 +473,7 @@
     refreshTimer=null;
   }
 
-  // ================== TICKER ==================
+  // ---------------- TICKER ----------------
   const tickerTimeEl=document.getElementById("ticker-time");
   const tickerTrackEl=document.getElementById("ticker-track");
   let tickerTimer=null;
@@ -356,28 +490,33 @@
     if(tickerTimeEl) tickerTimeEl.textContent=formatClockHHMM();
   }
 
-  function stripTags(html){
-    return html.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+  function parseTickerRSS(xmlText){
+    const doc = new DOMParser().parseFromString(xmlText,"text/xml");
+    const items = Array.from(doc.querySelectorAll("item")).slice(0,6);
+    if(!items.length) return null;
+
+    const hhmm = formatClockHHMM();
+    return items.map(it=>{
+      const t = stripHtml(it.querySelector("title")?.textContent||"");
+      return `${hhmm} ${t}`;
+    }).join(config.tickerSeparator);
   }
 
   function normalizeTicker(raw){
-  // si c'est du RSS/XML → extraire les <title> d'items
-  if(raw.includes("<rss") || raw.includes("<channel")){
-    const titles = Array.from(raw.matchAll(/<item[\s\S]*?<title>([\s\S]*?)<\/title>/gi))
-      .map(m => stripTags(m[1]))
-      .filter(Boolean)
-      .slice(0, 8); // limite
-    if(titles.length) return titles.join(config.tickerSeparator);
+    if(!raw) return "Aucune information pour le moment";
+
+    const trimmed = raw.trim();
+
+    if(trimmed.startsWith("<") && /<rss|<feed|<channel/i.test(trimmed)){
+      const rss = parseTickerRSS(trimmed);
+      if(rss) return rss;
+    }
+
+    const lines = trimmed.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    if(!lines.length) return "Aucune information pour le moment";
+    const hhmm = formatClockHHMM();
+    return lines.map(l=>`${hhmm} ${l}`).join(config.tickerSeparator);
   }
-
-  // fallback texte ligne par ligne
-  const lines = raw.split(/\r?\n/)
-    .map(l=>stripTags(l))
-    .filter(Boolean);
-
-  if(!lines.length) return "Aucune information pour le moment";
-  return lines.join(config.tickerSeparator);
-}
 
   function applyTickerText(text){
     if(!tickerTrackEl) return;
@@ -386,11 +525,11 @@
 
     const t1=document.createElement("div");
     t1.className="ticker-text";
-    t1.innerHTML=text; // <-- texte déjà avec logo svg côté HTML/serveur si besoin
+    t1.textContent=text;
 
     const t2=document.createElement("div");
     t2.className="ticker-text";
-    t2.innerHTML=text;
+    t2.textContent=text;
 
     tickerTrackEl.appendChild(t1);
     tickerTrackEl.appendChild(t2);
@@ -405,13 +544,18 @@
   async function refreshTicker(){
     if(!config.tickerEnabled) return;
     try{
-      const res=await fetch(config.tickerUrl,{cache:"no-store"});
-      const raw=await res.text();
-      if(raw!==lastTickerRaw){
-        lastTickerRaw=raw;
-        applyTickerText(normalizeTicker(raw));
+      const res = await fetch(config.tickerUrl, {cache:"no-store"});
+      if(!res.ok) throw new Error("HTTP "+res.status);
+
+      const raw = await res.text();
+      const cleaned = normalizeTicker(raw);
+
+      if(cleaned!==lastTickerRaw){
+        lastTickerRaw=cleaned;
+        applyTickerText(cleaned);
       }
     }catch(e){
+      console.warn("Ticker fetch failed:", e);
       applyTickerText("Infos locales indisponibles");
     }
   }
@@ -428,7 +572,7 @@
     tickerTimer=null;
   }
 
-  // ================== METEO (Open-Meteo) ==================
+  // ---------------- METEO (Open-Meteo) ----------------
   const weatherBox=document.getElementById("ticker-weather");
   const tempNowEl=document.getElementById("temp-now");
   const tempRangeEl=document.getElementById("temp-range");
@@ -493,13 +637,16 @@
     weatherTimer=null;
   }
 
-  // ---------- orchestrateur ----------
-  function restartTimers(){
+  // ---------------- ORCHESTRATEUR ----------------
+  function restartTimers(forceRotation=false){
     stopAutoRefresh(); startAutoRefresh();
     stopRotation(); stopAutoSwitch();
 
-    if(config.autoSwitchEventEnabled && hasEventConfigured()) startAutoSwitch();
-    else if(config.rotationEnabled) startRotation();
+    if(config.autoSwitchEventEnabled && hasEventConfigured()){
+      startAutoSwitch();
+    }else if(config.rotationEnabled || forceRotation){
+      startRotation();
+    }
 
     stopTicker(); startTicker();
     stopWeather(); startWeather();
@@ -508,18 +655,39 @@
   function init(){
     loadConfig();
 
-    // Premier bumper au chargement (si activé)
+    requestWakeLock();
+    installWakeLockFallback();
+
+    // Premier bumper au chargement
     if(config.bumperEnabled){
-      resetBumperAnimation();
-      bumperEl?.style.setProperty("--bumper-exit-delay", (config.bumperDurationMs/1000 - 0.8) + "s");
-      setTimeout(()=> bumperEl?.classList.remove("show"), config.bumperDurationMs);
+      if(!config.tickerVisibleDuringBumper){
+        setTickerVisibilityDuringBumper(false);
+      }
+
+      bumperEl?.classList.add("show");
+      bumperEl?.style.setProperty("--bumper-exit-delay",
+        (config.bumperDurationMs/1000 - 0.6) + "s"
+      );
+
+      setTimeout(()=>{
+        bumperEl?.classList.remove("show");
+        if(!config.tickerVisibleDuringBumper){
+          setTickerVisibilityDuringBumper(true);
+        }
+      }, config.bumperDurationMs);
     }
 
+    currentDisplayMode = config.mode || "show";
     render();
-    restartTimers();
+    restartTimers(true);
   }
 
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 
+  function escapeHtml(s){
+    return (s||"").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
 })();

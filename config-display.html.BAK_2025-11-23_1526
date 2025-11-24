@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <title>Clock-OnAir – Configuration Display</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    :root{
+      --bg:#0b0f1e;--panel:#121733;--panel2:#0f1430;
+      --text:#e9efff;--muted:#9fb0d9;--accent:#3b82f6;--accent2:#22c55e;
+      --danger:#ef4444;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    body{margin:0;background:radial-gradient(1200px circle at 50% 0%,#141a38 0%,#0b0f1e 60%,#060812 100%);color:var(--text);}
+    header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
+    h1{margin:0;font-size:1.2rem;letter-spacing:.06em;text-transform:uppercase;color:#bcd0ff;}
+    main{max-width:1100px;margin:0 auto;padding:18px;display:grid;gap:14px;}
+    .panel{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px;}
+    .panel h2{margin:0 0 10px;font-size:1.05rem;}
+    .row{display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+    label{font-weight:800;font-size:.95rem;color:#cfe0ff;min-width:160px;}
+    input,select,textarea{
+      background:var(--panel2);border:1px solid rgba(255,255,255,.08);
+      color:var(--text);padding:8px 10px;border-radius:8px;font-size:.95rem;
+    }
+    textarea{width:100%;min-height:70px;resize:vertical;}
+    .btn{cursor:pointer;border:none;padding:9px 12px;border-radius:9px;font-weight:900;}
+    .btn.primary{background:var(--accent);color:white;}
+    .btn.success{background:var(--accent2);color:#052012;}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.12);color:var(--text);}
+    .btn.danger{background:var(--danger);color:white;}
+    .screens{display:grid;gap:8px;margin-top:6px;}
+    .screen-item{
+      display:grid;grid-template-columns:1fr 180px 1fr auto;gap:8px;align-items:center;
+      background:#0c1129;border:1px dashed rgba(255,255,255,.12);padding:8px;border-radius:10px;
+    }
+    .hint{color:var(--muted);font-size:.9rem}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Configuration Display</h1>
+  <div style="display:flex;gap:8px;">
+    <button class="btn ghost" id="btn-preview">Preview</button>
+    <button class="btn primary" id="btn-preview-full">Preview plein écran</button>
+    <button class="btn success" id="btn-save">Enregistrer</button>
+  </div>
+</header>
+
+<main>
+
+  <section class="panel">
+    <h2>Thème & Bumper</h2>
+    <div class="row">
+      <label>Thème</label>
+      <select id="cfg-theme">
+        <option value="light">Clair</option>
+        <option value="dark">Sombre</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label>Bumper activé</label>
+      <input type="checkbox" id="cfg-bumper-enabled"/>
+    </div>
+
+    <div class="row">
+      <label>Durée bumper (ms)</label>
+      <input type="number" id="cfg-bumper-duration" min="2000" step="500"/>
+      <span class="hint">Doit rester cohérent avec l’animation</span>
+    </div>
+
+    <div class="row">
+      <label>Ticker visible pendant bumper</label>
+      <input type="checkbox" id="cfg-ticker-visible-bumper"/>
+      <span class="hint">Si décoché : ticker/heure/météo disparaissent pendant le bumper</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Rotation par écrans</h2>
+    <div class="row">
+      <label>Rotation activée</label>
+      <input type="checkbox" id="cfg-rotation-enabled"/>
+    </div>
+
+    <div class="screens" id="screens-list"></div>
+
+    <div class="row">
+      <button class="btn ghost" id="btn-add-screen">+ Ajouter écran</button>
+      <button class="btn danger" id="btn-clear-screens">Réinitialiser</button>
+    </div>
+
+    <p class="hint">
+      Durées individuelles par écran.  
+      Ordre = séquence de rotation.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Événement manuel</h2>
+    <div class="row"><label>Titre</label><input id="cfg-event-title" style="flex:1"/></div>
+    <div class="row"><label>Sous-titre</label><input id="cfg-event-subtitle" style="flex:1"/></div>
+    <div class="row"><label>Image (URL/Base64)</label><input id="cfg-event-image" style="flex:1"/></div>
+    <div class="row">
+      <label>Description</label>
+      <textarea id="cfg-event-details"></textarea>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Ticker</h2>
+    <div class="row"><label>Ticker activé</label><input type="checkbox" id="cfg-ticker-enabled"/></div>
+    <div class="row">
+      <label>URL ticker</label>
+      <input id="cfg-ticker-url" style="flex:1"/>
+      <span class="hint">ex: /rss/infos.xml ou /ticker.txt</span>
+    </div>
+    <div class="row">
+      <label>Rafraîchissement (ms)</label>
+      <input type="number" id="cfg-ticker-refresh" min="5000" step="1000"/>
+    </div>
+    <div class="row">
+      <label>Vitesse défilement</label>
+      <input type="number" id="cfg-ticker-speed" min="40" max="220" step="5"/>
+      <span class="hint">px/s</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Podcast (RSS)</h2>
+    <div class="row"><label>Écran podcast activé</label><input type="checkbox" id="cfg-podcast-enabled"/></div>
+    <div class="row">
+      <label>URL RSS podcast</label>
+      <input id="cfg-podcast-url" style="flex:1"/>
+      <span class="hint">ex: /rss/podcast09/…</span>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  function qs(id){return document.getElementById(id);}
+
+  function load(){
+    const saved = JSON.parse(localStorage.getItem("display_config")||"{}");
+
+    const cfg = {
+      theme: saved.theme || "light",
+      bumperEnabled: saved.bumperEnabled !== false,
+      bumperDurationMs: saved.bumperDurationMs || 6000,
+      tickerVisibleDuringBumper: saved.tickerVisibleDuringBumper !== false,
+
+      rotationEnabled: saved.rotationEnabled !== false,
+      screens: Array.isArray(saved.screens) && saved.screens.length
+        ? saved.screens
+        : [{mode:"show",durationMs:60000},{mode:"podcast",durationMs:60000},{mode:"schedule",durationMs:60000}],
+
+      eventTitle: saved.eventTitle||"",
+      eventSubtitle: saved.eventSubtitle||"",
+      eventImage: saved.eventImage||"",
+      eventDetails: saved.eventDetails||"",
+
+      tickerEnabled: saved.tickerEnabled !== false,
+      tickerUrl: saved.tickerUrl || "/rss/infos.xml",
+      tickerRefreshMs: saved.tickerRefreshMs || 15000,
+      tickerSpeedPxPerSec: saved.tickerSpeedPxPerSec || 90,
+
+      podcastEnabled: saved.podcastEnabled !== false,
+      podcastUrl: saved.podcastUrl || "/rss/podcast09/podcast_01bcfbf6-efda-44c7-88f4-300aafef9039.xml"
+    };
+
+    qs("cfg-theme").value = cfg.theme;
+    qs("cfg-bumper-enabled").checked = cfg.bumperEnabled;
+    qs("cfg-bumper-duration").value = cfg.bumperDurationMs;
+    qs("cfg-ticker-visible-bumper").checked = cfg.tickerVisibleDuringBumper;
+
+    qs("cfg-rotation-enabled").checked = cfg.rotationEnabled;
+
+    qs("cfg-event-title").value = cfg.eventTitle;
+    qs("cfg-event-subtitle").value = cfg.eventSubtitle;
+    qs("cfg-event-image").value = cfg.eventImage;
+    qs("cfg-event-details").value = cfg.eventDetails;
+
+    qs("cfg-ticker-enabled").checked = cfg.tickerEnabled;
+    qs("cfg-ticker-url").value = cfg.tickerUrl;
+    qs("cfg-ticker-refresh").value = cfg.tickerRefreshMs;
+    qs("cfg-ticker-speed").value = cfg.tickerSpeedPxPerSec;
+
+    qs("cfg-podcast-enabled").checked = cfg.podcastEnabled;
+    qs("cfg-podcast-url").value = cfg.podcastUrl;
+
+    renderScreens(cfg.screens);
+  }
+
+  function renderScreens(screens){
+    const list = qs("screens-list");
+    list.innerHTML = "";
+
+    screens.forEach((s,idx)=>{
+      const row = document.createElement("div");
+      row.className = "screen-item";
+      row.innerHTML = `
+        <select data-k="mode">
+          <option value="show">Émission</option>
+          <option value="event">Événement</option>
+          <option value="nowplaying">Now Playing</option>
+          <option value="schedule">Programme</option>
+          <option value="podcast">Podcast</option>
+        </select>
+        <input data-k="durationMs" type="number" min="5000" step="1000"/>
+        <div class="hint">Durée écran (ms)</div>
+        <button class="btn danger" data-k="remove">Supprimer</button>
+      `;
+      row.querySelector('select[data-k="mode"]').value = s.mode;
+      row.querySelector('input[data-k="durationMs"]').value = s.durationMs;
+
+      row.querySelector('[data-k="remove"]').addEventListener("click", ()=>{
+        screens.splice(idx,1);
+        renderScreens(screens);
+      });
+
+      list.appendChild(row);
+    });
+
+    list.dataset.screens = JSON.stringify(screens);
+  }
+
+  function collect(){
+    const list = qs("screens-list");
+    let screens = [];
+    try{ screens = JSON.parse(list.dataset.screens||"[]"); }catch(_){}
+
+    [...list.children].forEach((row,i)=>{
+      const mode = row.querySelector('select[data-k="mode"]').value;
+      const dur  = Number(row.querySelector('input[data-k="durationMs"]').value||60000);
+      screens[i] = { mode, durationMs: dur };
+    });
+
+    return {
+      theme: qs("cfg-theme").value,
+      bumperEnabled: qs("cfg-bumper-enabled").checked,
+      bumperDurationMs: Number(qs("cfg-bumper-duration").value||6000),
+      tickerVisibleDuringBumper: qs("cfg-ticker-visible-bumper").checked,
+
+      rotationEnabled: qs("cfg-rotation-enabled").checked,
+      screens,
+
+      eventTitle: qs("cfg-event-title").value,
+      eventSubtitle: qs("cfg-event-subtitle").value,
+      eventImage: qs("cfg-event-image").value,
+      eventDetails: qs("cfg-event-details").value,
+
+      tickerEnabled: qs("cfg-ticker-enabled").checked,
+      tickerUrl: qs("cfg-ticker-url").value,
+      tickerRefreshMs: Number(qs("cfg-ticker-refresh").value||15000),
+      tickerSpeedPxPerSec: Number(qs("cfg-ticker-speed").value||90),
+
+      podcastEnabled: qs("cfg-podcast-enabled").checked,
+      podcastUrl: qs("cfg-podcast-url").value
+    };
+  }
+
+  qs("btn-add-screen").addEventListener("click", ()=>{
+    const list = qs("screens-list");
+    let screens = [];
+    try{ screens = JSON.parse(list.dataset.screens||"[]"); }catch(_){}
+    screens.push({mode:"show",durationMs:60000});
+    renderScreens(screens);
+  });
+
+  qs("btn-clear-screens").addEventListener("click", ()=>{
+    const screens = [{mode:"show",durationMs:60000}];
+    renderScreens(screens);
+  });
+
+  qs("btn-preview").addEventListener("click", ()=>{
+    localStorage.setItem("display_config", JSON.stringify(collect()));
+    window.open("display.html","DisplayPreview");
+  });
+
+  qs("btn-preview-full").addEventListener("click", ()=>{
+    localStorage.setItem("display_config", JSON.stringify(collect()));
+    const w = window.open("display.html","DisplayPreviewFull");
+    if(w){
+      w.addEventListener("load", ()=> {
+        try{ w.document.documentElement.requestFullscreen(); }catch(_){}
+      });
+    }
+  });
+
+  qs("btn-save").addEventListener("click", ()=>{
+    localStorage.setItem("display_config", JSON.stringify(collect()));
+    alert("✅ Configuration Display enregistrée.");
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

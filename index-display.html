@@ -184,13 +184,13 @@
     
     <div class="grid">
       <div class="card primary">
-        <span class="card-icon">📅</span>
-        <h2 class="card-title">Créer un événement</h2>
+        <span class="card-icon">⚙️</span>
+        <h2 class="card-title">Configuration Affichage</h2>
         <p class="card-desc">
-          Interface simplifiée pour créer votre affiche personnalisée.<br>
-          Uploadez une image, ajoutez titre et description.
+          Paramétrez l'affichage dynamique : animation logo, bascule auto API/Événement, durées, thème.<br>
+          Configuration complète en quelques clics.
         </p>
-        <a href="event-config.html" class="card-link">Commencer →</a>
+        <a href="#" onclick="openConfig(event)" class="card-link">Configurer →</a>
       </div>
       
       <div class="card">
@@ -201,6 +201,16 @@
           Affiche émissions, événements ou programme.
         </p>
         <a href="display.html" class="card-link">Ouvrir</a>
+      </div>
+      
+      <div class="card">
+        <span class="card-icon">📅</span>
+        <h3 class="card-title">Créer un événement</h3>
+        <p class="card-desc">
+          Interface simplifiée pour créer<br>
+          votre affiche personnalisée.
+        </p>
+        <a href="event-config.html" class="card-link">Créer</a>
       </div>
       
       <div class="card">
@@ -244,6 +254,141 @@
       </div>
     </div>
     
+    <!-- Modal de configuration -->
+    <div id="configModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; overflow-y: auto; padding: 20px;">
+      <div style="max-width: 800px; margin: 0 auto; background: #2a2a2a; border-radius: 16px; padding: 30px; position: relative;">
+        <button onclick="closeConfig()" style="position: absolute; top: 20px; right: 20px; background: #444; border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px;">×</button>
+        
+        <h2 style="margin-bottom: 30px; font-size: 28px; color: #fff;">⚙️ Configuration Affichage</h2>
+        
+        <!-- Bascule automatique API/Événement -->
+        <div style="background: #333; border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+          <h3 style="color: #4a9eff; margin-bottom: 20px; font-size: 20px;">🔄 Bascule Automatique</h3>
+          
+          <label style="display: flex; align-items: center; margin-bottom: 20px; cursor: pointer;">
+            <input type="checkbox" id="autoSwitchEnabled" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+            <span style="color: #fff; font-size: 16px;">Activer la rotation API → Logo → Événement</span>
+          </label>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">
+              Intervalle de rotation (secondes)
+              <span style="color: #666; font-size: 12px;"> - Le logo reste toujours 5s</span>
+            </label>
+            <input type="number" id="switchInterval" min="5" max="300" value="20" 
+                   style="width: 100%; padding: 12px; background: #444; border: 2px solid #555; border-radius: 8px; color: white; font-size: 16px;">
+            <small style="color: #666; display: block; margin-top: 5px;">
+              Exemple: 20s = API (20s) → Logo (5s) → Événement (20s)
+            </small>
+          </div>
+        </div>
+        
+        <!-- Animation du logo -->
+        <div style="background: #333; border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+          <h3 style="color: #4a9eff; margin-bottom: 20px; font-size: 20px;">🎬 Animation Logo</h3>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">Durée d'affichage du logo (secondes)</label>
+            <input type="number" id="logoDuration" min="3" max="30" value="5" 
+                   style="width: 100%; padding: 12px; background: #444; border: 2px solid #555; border-radius: 8px; color: white; font-size: 16px;">
+            <small style="color: #666; display: block; margin-top: 5px;">Recommandé: 5-10 secondes</small>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">Tagline sous le logo</label>
+            <input type="text" id="logoTagline" value="Votre radio locale" maxlength="50"
+                   style="width: 100%; padding: 12px; background: #444; border: 2px solid #555; border-radius: 8px; color: white; font-size: 16px;">
+            <small style="color: #666; display: block; margin-top: 5px;">Texte affiché sous le logo</small>
+          </div>
+        </div>
+        
+        <!-- Mode d'affichage -->
+        <div style="background: #333; border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+          <h3 style="color: #4a9eff; margin-bottom: 20px; font-size: 20px;">📺 Mode d'affichage</h3>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">Mode par défaut</label>
+            <select id="displayMode" style="width: 100%; padding: 12px; background: #444; border: 2px solid #555; border-radius: 8px; color: white; font-size: 16px;">
+              <option value="show">📡 API Radio France (émission en direct)</option>
+              <option value="event">📅 Événement configuré</option>
+              <option value="nowplaying">🎵 Now Playing (musique)</option>
+              <option value="schedule">📋 Programme du jour</option>
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">Thème visuel</label>
+            <select id="displayTheme" style="width: 100%; padding: 12px; background: #444; border: 2px solid #555; border-radius: 8px; color: white; font-size: 16px;">
+              <option value="dark">🌙 Sombre (recommandé)</option>
+              <option value="light">☀️ Clair</option>
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">Intervalle de rafraîchissement (secondes)</label>
+            <input type="number" id="refreshInterval" min="10" max="300" value="30" 
+                   style="width: 100%; padding: 12px; background: #444; border: 2px solid #555; border-radius: 8px; color: white; font-size: 16px;">
+            <small style="color: #666; display: block; margin-top: 5px;">Fréquence de mise à jour des données API</small>
+          </div>
+        </div>
+        
+        <!-- Rotation multi-modes (avancé) -->
+        <div style="background: #333; border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+          <h3 style="color: #4a9eff; margin-bottom: 20px; font-size: 20px;">🔁 Rotation Multi-Modes (Avancé)</h3>
+          
+          <label style="display: flex; align-items: center; margin-bottom: 20px; cursor: pointer;">
+            <input type="checkbox" id="rotationEnabled" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+            <span style="color: #fff; font-size: 16px;">Activer rotation avancée (désactive la bascule auto ci-dessus)</span>
+          </label>
+          
+          <div id="rotationOptions" style="opacity: 0.5; pointer-events: none;">
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">Intervalle de rotation (secondes)</label>
+              <input type="number" id="rotationInterval" min="10" max="600" value="60" 
+                     style="width: 100%; padding: 12px; background: #444; border: 2px solid #555; border-radius: 8px; color: white; font-size: 16px;">
+            </div>
+            
+            <label style="display: block; color: #999; margin-bottom: 8px; font-size: 14px;">Modes à inclure dans la rotation</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+              <label style="display: flex; align-items: center; cursor: pointer; padding: 10px; background: #444; border-radius: 8px;">
+                <input type="checkbox" class="rotation-mode" value="show" checked style="margin-right: 10px;">
+                <span style="color: #fff;">📡 API Radio France</span>
+              </label>
+              <label style="display: flex; align-items: center; cursor: pointer; padding: 10px; background: #444; border-radius: 8px;">
+                <input type="checkbox" class="rotation-mode" value="nowplaying" style="margin-right: 10px;">
+                <span style="color: #fff;">🎵 Now Playing</span>
+              </label>
+              <label style="display: flex; align-items: center; cursor: pointer; padding: 10px; background: #444; border-radius: 8px;">
+                <input type="checkbox" class="rotation-mode" value="schedule" style="margin-right: 10px;">
+                <span style="color: #fff;">📋 Programme</span>
+              </label>
+              <label style="display: flex; align-items: center; cursor: pointer; padding: 10px; background: #444; border-radius: 8px;">
+                <input type="checkbox" class="rotation-mode" value="event" style="margin-right: 10px;">
+                <span style="color: #fff;">📅 Événement</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Boutons d'action -->
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+          <button onclick="saveConfig()" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #0078d4, #4a9eff); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+            💾 Enregistrer
+          </button>
+          <button onclick="resetConfig()" style="padding: 15px 30px; background: #444; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+            🔄 Réinitialiser
+          </button>
+          <button onclick="closeConfig()" style="padding: 15px 30px; background: #555; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+            Annuler
+          </button>
+        </div>
+        
+        <div id="saveMessage" style="margin-top: 20px; padding: 15px; background: #2d7d2d; border-radius: 8px; color: #4caf50; text-align: center; display: none;">
+          ✅ Configuration enregistrée avec succès !
+        </div>
+      </div>
+    </div>
+    
     <div class="status">
       ✅ <strong>Mode démo activé</strong> - Le système fonctionne avec des données de test.<br>
       <small>Configurez votre token API Radio France dans "Configuration Tech" pour les vraies données.</small>
@@ -255,6 +400,206 @@
     if (!localStorage.getItem('radiofrance_demo_mode')) {
       localStorage.setItem('radiofrance_demo_mode', 'true');
     }
+    
+    // ============ GESTION CONFIGURATION ============
+    
+    function openConfig(event) {
+      event.preventDefault();
+      loadCurrentConfig();
+      document.getElementById('configModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeConfig() {
+      document.getElementById('configModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    
+    function loadCurrentConfig() {
+      const saved = localStorage.getItem('display_config');
+      let config = {
+        mode: 'show',
+        theme: 'dark',
+        refreshInterval: 30000,
+        autoSwitchEventEnabled: true,
+        autoSwitchEventInterval: 20000,
+        logoDuration: 5000,
+        logoTagline: 'Votre radio locale',
+        rotationEnabled: false,
+        rotationInterval: 60000,
+        rotationModes: ['show', 'nowplaying', 'schedule']
+      };
+      
+      if (saved) {
+        try {
+          config = { ...config, ...JSON.parse(saved) };
+        } catch (e) {
+          console.error('Erreur chargement config:', e);
+        }
+      }
+      
+      // Remplir le formulaire
+      document.getElementById('autoSwitchEnabled').checked = config.autoSwitchEventEnabled;
+      document.getElementById('switchInterval').value = config.autoSwitchEventInterval / 1000;
+      document.getElementById('logoDuration').value = config.logoDuration / 1000;
+      document.getElementById('logoTagline').value = config.logoTagline || 'Votre radio locale';
+      document.getElementById('displayMode').value = config.mode;
+      document.getElementById('displayTheme').value = config.theme;
+      document.getElementById('refreshInterval').value = config.refreshInterval / 1000;
+      document.getElementById('rotationEnabled').checked = config.rotationEnabled;
+      document.getElementById('rotationInterval').value = config.rotationInterval / 1000;
+      
+      // Rotation modes
+      const modeCheckboxes = document.querySelectorAll('.rotation-mode');
+      modeCheckboxes.forEach(cb => {
+        cb.checked = config.rotationModes.includes(cb.value);
+      });
+      
+      updateRotationUI();
+    }
+    
+    function saveConfig() {
+      const rotationModes = Array.from(document.querySelectorAll('.rotation-mode:checked'))
+        .map(cb => cb.value);
+      
+      const config = {
+        mode: document.getElementById('displayMode').value,
+        theme: document.getElementById('displayTheme').value,
+        refreshInterval: parseInt(document.getElementById('refreshInterval').value) * 1000,
+        autoSwitchEventEnabled: document.getElementById('autoSwitchEnabled').checked,
+        autoSwitchEventInterval: parseInt(document.getElementById('switchInterval').value) * 1000,
+        logoDuration: parseInt(document.getElementById('logoDuration').value) * 1000,
+        logoTagline: document.getElementById('logoTagline').value || 'Votre radio locale',
+        rotationEnabled: document.getElementById('rotationEnabled').checked,
+        rotationInterval: parseInt(document.getElementById('rotationInterval').value) * 1000,
+        rotationModes: rotationModes.length > 0 ? rotationModes : ['show']
+      };
+      
+      // Sauvegarder
+      localStorage.setItem('display_config', JSON.stringify(config));
+      
+      // Afficher message de confirmation
+      const msg = document.getElementById('saveMessage');
+      msg.style.display = 'block';
+      setTimeout(() => {
+        msg.style.display = 'none';
+      }, 3000);
+      
+      // Recharger display.html si ouvert dans un autre onglet
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('display_config_channel');
+          bc.postMessage({ type: 'config_updated', config });
+          bc.close();
+        }
+      } catch (e) {
+        console.log('BroadcastChannel non disponible');
+      }
+      
+      console.log('✅ Configuration sauvegardée:', config);
+    }
+    
+    function resetConfig() {
+      if (confirm('Êtes-vous sûr de vouloir réinitialiser la configuration par défaut ?')) {
+        localStorage.removeItem('display_config');
+        loadCurrentConfig();
+        
+        const msg = document.getElementById('saveMessage');
+        msg.textContent = '🔄 Configuration réinitialisée aux valeurs par défaut';
+        msg.style.display = 'block';
+        setTimeout(() => {
+          msg.textContent = '✅ Configuration enregistrée avec succès !';
+          msg.style.display = 'none';
+        }, 3000);
+      }
+    }
+    
+    // Gérer l'activation/désactivation de la rotation avancée
+    document.addEventListener('DOMContentLoaded', () => {
+      const rotationCheckbox = document.getElementById('rotationEnabled');
+      const autoSwitchCheckbox = document.getElementById('autoSwitchEnabled');
+      
+      if (rotationCheckbox) {
+        rotationCheckbox.addEventListener('change', updateRotationUI);
+      }
+      
+      if (autoSwitchCheckbox) {
+        autoSwitchCheckbox.addEventListener('change', () => {
+          if (autoSwitchCheckbox.checked && rotationCheckbox.checked) {
+            rotationCheckbox.checked = false;
+            updateRotationUI();
+          }
+        });
+      }
+      
+      if (rotationCheckbox) {
+        rotationCheckbox.addEventListener('change', () => {
+          if (rotationCheckbox.checked && autoSwitchCheckbox.checked) {
+            autoSwitchCheckbox.checked = false;
+          }
+          updateRotationUI();
+        });
+      }
+    });
+    
+    function updateRotationUI() {
+      const rotationEnabled = document.getElementById('rotationEnabled').checked;
+      const rotationOptions = document.getElementById('rotationOptions');
+      
+      if (rotationEnabled) {
+        rotationOptions.style.opacity = '1';
+        rotationOptions.style.pointerEvents = 'auto';
+      } else {
+        rotationOptions.style.opacity = '0.5';
+        rotationOptions.style.pointerEvents = 'none';
+      }
+    }
+    
+    // Fermer la modal avec Échap
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeConfig();
+      }
+    });
+    
+    // Afficher les infos de config actuelles dans le status
+    function updateStatusInfo() {
+      const saved = localStorage.getItem('display_config');
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          const statusDiv = document.querySelector('.status');
+          
+          let statusText = '✅ <strong>Système configuré</strong> - ';
+          
+          if (config.autoSwitchEventEnabled) {
+            statusText += `Bascule auto activée (${config.autoSwitchEventInterval/1000}s)`;
+          } else if (config.rotationEnabled) {
+            statusText += `Rotation multi-modes activée (${config.rotationModes.length} modes)`;
+          } else {
+            statusText += `Mode fixe: ${getModeLabel(config.mode)}`;
+          }
+          
+          statusText += ` | Logo: ${config.logoDuration/1000}s | Thème: ${config.theme}`;
+          statusDiv.innerHTML = statusText + '<br><small>Cliquez sur "Configuration Affichage" pour modifier les paramètres.</small>';
+        } catch (e) {
+          console.error('Erreur lecture config:', e);
+        }
+      }
+    }
+    
+    function getModeLabel(mode) {
+      const labels = {
+        'show': '📡 API Radio France',
+        'event': '📅 Événement',
+        'nowplaying': '🎵 Now Playing',
+        'schedule': '📋 Programme'
+      };
+      return labels[mode] || mode;
+    }
+    
+    // Mettre à jour le statut au chargement
+    document.addEventListener('DOMContentLoaded', updateStatusInfo);
   </script>
 </body>
 </html>

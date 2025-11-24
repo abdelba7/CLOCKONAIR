@@ -31,20 +31,7 @@
         </div>
       </div>
 
-      <div class="header-center">
-        <div class="header-center-inner"></div>
-      </div>
-
-      <!-- Header-right = icônes veille / play / config -->
       <div class="header-right tech-header-actions">
-        <!-- VEILLE -->
-        <button class="icon-button icon-standby" id="btn-standby" type="button" aria-label="Retour accueil">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 2v8" stroke-linecap="round"/>
-            <path d="M7 4.5a8 8 0 1 0 10 0" stroke-linecap="round"/>
-          </svg>
-        </button>
-
         <!-- PLAY -->
         <button class="icon-button" id="btn-player" type="button" aria-label="Ouvrir player">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -60,6 +47,14 @@
                   stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
+        
+        <!-- VEILLE -->
+        <button class="icon-button icon-standby" id="btn-standby" type="button" aria-label="Retour accueil">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2v8" stroke-linecap="round"/>
+            <path d="M7 4.5a8 8 0 1 0 10 0" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -71,8 +66,10 @@
       </button>
     </div>
 
-    <!-- CHRONO ON AIR (standalone) -->
-    <div class="onair-chrono-standalone" id="onair-chrono-header">00:00</div>
+    <!-- CHRONO ON AIR -->
+    <div class="onair-chrono-header-wrapper">
+      <div class="onair-chrono-standalone" id="onair-chrono-header">00:00</div>
+    </div>
 
     <!-- BLOC CENTRAL -->
     <main class="main-area">
@@ -93,6 +90,7 @@
               <div class="onair-label" id="onair-label"></div>
               <div class="np-phase-label" id="np-phase-label"></div>
               <div class="np-chrono-main" id="np-chrono-main">00:00</div>
+              <div class="np-outro-duration" id="np-outro-duration"></div>
             </div>
           </div>
         </div>
@@ -159,6 +157,34 @@
         </div>
 
         <div class="config-section">
+          <h3>Commandes Audio</h3>
+          <div class="config-row">
+            <div class="config-label">Bouton ORDRES</div>
+            <div class="config-actions">
+              <label class="config-switch">
+                <input type="checkbox" id="config-ordres-enabled" checked />
+                <span class="config-slider"></span>
+              </label>
+              <span id="ordres-status" style="margin-left: 10px; color: var(--text-muted-dark); font-size: 0.85rem;">Activé</span>
+            </div>
+          </div>
+          <div class="config-row">
+            <div class="config-label">Microphone affecté</div>
+            <div class="config-actions">
+              <select id="config-ordres-channel" style="padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-primary-dark);">
+                <option value="1">CH1 - Micro 1</option>
+                <option value="2">CH2 - Micro 2</option>
+                <option value="3">CH3 - Micro 3</option>
+                <option value="4">CH4 - Micro 4</option>
+              </select>
+            </div>
+          </div>
+          <div class="config-hint">
+            Activer/Désactiver le bouton ORDRES et choisir quel microphone sera affecté (Pan droit + Mute). Le bouton fonctionne en maintien/relâché.
+          </div>
+        </div>
+
+        <div class="config-section">
           <h3>Now Playing – Simulateur</h3>
           <div class="np-sim-grid">
             <label class="np-sim-label">Artiste</label>
@@ -191,137 +217,215 @@
       </div>
 
       <!-- TAB DISPLAY -->
-      <div class="config-content hidden" id="display-content">
-        <div class="config-section">
-          <h3>API Radio France</h3>
-          <div class="config-row">
-            <label class="config-label">Token API</label>
-            <input id="display-api-token" class="np-sim-input" type="text" placeholder="Votre token API Radio France..." style="flex: 1;" />
-          </div>
-          <div class="config-row">
-            <button class="mini-btn" id="display-save-token" type="button">Enregistrer Token</button>
-            <button class="mini-btn ghost" id="display-test-api" type="button">Tester API</button>
-            <button class="mini-btn ghost" id="display-demo-toggle" type="button">Mode Démo</button>
-          </div>
-          <div class="config-hint">
-            Obtenez votre token sur <a href="https://developers.radiofrance.fr" target="_blank" style="color: var(--accent);">developers.radiofrance.fr</a><br>
-            <span id="demo-mode-status" style="color: var(--accent-warn); display: none;">⚠️ Mode démo activé (données fictives)</span>
-          </div>
-        </div>
+<div class="config-content hidden" id="display-content">
 
-        <div class="config-section">
-          <h3>Mode d'affichage</h3>
-          <div class="config-row">
-            <label class="config-label">Mode actif</label>
-            <select id="display-mode" class="np-sim-input" style="flex: 1;">
-              <option value="show">Émission en cours</option>
-              <option value="event">Événement personnalisé</option>
-              <option value="nowplaying">Now Playing</option>
-              <option value="schedule">Programme du jour</option>
-            </select>
-          </div>
-          <div class="config-row">
-            <label class="config-label">Thème</label>
-            <select id="display-theme" class="np-sim-input" style="flex: 1;">
-              <option value="dark">Sombre</option>
-              <option value="light">Clair</option>
-            </select>
-          </div>
-        </div>
+  <!-- ===================== API RADIO FRANCE ===================== -->
+  <div class="config-section">
+    <h3>API Radio France</h3>
+    <div class="config-row">
+      <label class="config-label">Token API</label>
+      <input id="display-api-token" class="np-sim-input" type="text"
+             placeholder="Votre token API Radio France..." style="flex: 1;" />
+    </div>
+    <div class="config-row">
+      <button class="mini-btn" id="display-save-token" type="button">Enregistrer Token</button>
+      <button class="mini-btn ghost" id="display-test-api" type="button">Tester API</button>
+      <button class="mini-btn ghost" id="display-demo-toggle" type="button">Mode Démo</button>
+    </div>
+    <div class="config-hint">
+      Obtenez votre token sur
+      <a href="https://developers.radiofrance.fr" target="_blank"
+         style="color: var(--accent);">developers.radiofrance.fr</a><br>
+      <span id="demo-mode-status" style="color: var(--accent-warn); display: none;">
+        ⚠️ Mode démo activé (données fictives)
+      </span>
+    </div>
+  </div>
 
-        <div class="config-section" id="event-config" style="display: none;">
-          <h3>📅 Configuration Événement</h3>
-          
-          <div class="config-hint" style="margin-bottom: 15px; background: rgba(0,120,212,0.1); padding: 12px; border-radius: 6px; border-left: 3px solid #0078d4;">
-            💡 <strong>Nouveau :</strong> Utilisez la <a href="event-config.html" target="_blank" style="color: #4a9eff; text-decoration: underline;">page dédiée</a> pour une interface simplifiée d'upload d'image
-          </div>
-          
-          <div class="config-row">
-            <label class="config-label">Titre *</label>
-            <input id="display-event-title" class="np-sim-input" type="text" placeholder="Ex: Concert de Noël 2025" style="flex: 1;" />
-          </div>
-          
-          <div class="config-row">
-            <label class="config-label">Sous-titre</label>
-            <input id="display-event-subtitle" class="np-sim-input" type="text" placeholder="Ex: Samedi 21 décembre à 20h" style="flex: 1;" />
-          </div>
-          
-          <div class="config-row">
-            <label class="config-label">Description</label>
-            <textarea id="display-event-details" class="np-sim-input" rows="3" placeholder="Ex: Soirée musicale exceptionnelle avec l'orchestre symphonique..." style="flex: 1; resize: vertical;"></textarea>
-          </div>
-          
-          <div class="config-row" style="flex-direction: column; align-items: stretch;">
-            <label class="config-label" style="margin-bottom: 8px;">Image de l'événement</label>
-            
-            <!-- Option 1: Upload fichier -->
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-              <input id="display-event-image-file" type="file" accept="image/*" style="flex: 1; padding: 8px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; color: #fff;" />
-              <button class="mini-btn" id="display-event-upload" type="button">📤 Upload</button>
-            </div>
-            
-            <!-- Option 2: URL -->
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <span style="color: #888; font-size: 12px;">ou URL:</span>
-              <input id="display-event-image" class="np-sim-input" type="text" placeholder="https://exemple.com/affiche.jpg" style="flex: 1;" />
-            </div>
-            
-            <!-- Aperçu miniature -->
-            <div id="event-image-preview" style="margin-top: 10px; display: none;">
-              <img id="event-image-preview-img" src="" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 4px; border: 2px solid #444;" />
-              <button class="mini-btn ghost" id="display-event-clear-image" type="button" style="margin-left: 10px;">❌ Supprimer</button>
-            </div>
-          </div>
-          
-          <div class="config-row" style="gap: 10px;">
-            <button class="mini-btn" id="display-event-preview" type="button">👁️ Aperçu complet</button>
-            <button class="mini-btn" id="display-event-save-quick" type="button">💾 Enregistrer événement</button>
-          </div>
-          
-          <div class="config-hint" style="margin-top: 10px;">
-            💡 L'image sera convertie en Base64 et stockée localement. Format recommandé: JPG/PNG, max 2 Mo.
-          </div>
-        </div>
+  <!-- ===================== MODE + THEME ===================== -->
+  <div class="config-section">
+    <h3>Mode d'affichage</h3>
+    <div class="config-row">
+      <label class="config-label">Mode actif</label>
+      <select id="display-mode" class="np-sim-input" style="flex: 1;">
+        <option value="show">Émission en cours</option>
+        <option value="event">Événement personnalisé</option>
+        <option value="nowplaying">Now Playing</option>
+        <option value="schedule">Programme du jour</option>
+        <option value="podcast">Podcast</option>
+      </select>
+    </div>
 
-        <div class="config-section">
-          <h3>⏱️ Bascule automatique API / Événement</h3>
-          <div class="config-row">
-            <label class="config-label">Activer bascule auto</label>
-            <input id="display-auto-switch-enabled" type="checkbox" checked />
-          </div>
-          <div class="config-row">
-            <label class="config-label">Intervalle (secondes)</label>
-            <input id="display-auto-switch-interval" class="np-sim-input" type="number" min="5" max="120" step="5" value="20" style="width: 120px;" />
-          </div>
-          <div class="config-hint">
-            🔄 Alterne automatiquement entre l'API Radio France et votre événement. Si aucun événement n'est configuré, seule l'API sera affichée.
-          </div>
-        </div>
+    <div class="config-row">
+      <label class="config-label">Thème</label>
+      <select id="display-theme-select" class="np-sim-input" style="flex: 1;">
+        <option value="light">Clair</option>
+        <option value="dark">Sombre</option>
+      </select>
+    </div>
+  </div>
 
-        <div class="config-section">
-          <h3>Rotation multi-modes (avancé)</h3>
-          <div class="config-row">
-            <label class="config-label">Activer rotation</label>
-            <input id="display-rotation-enabled" type="checkbox" />
-          </div>
-          <div class="config-row">
-            <label class="config-label">Intervalle (secondes)</label>
-            <input id="display-rotation-interval" class="np-sim-input" type="number" min="10" step="5" value="60" style="width: 120px;" />
-          </div>
-          <div class="config-hint">
-            ⚠️ La bascule auto API/Événement est prioritaire si activée.
-          </div>
-        </div>
+  <!-- ===================== ROTATION ===================== -->
+  <div class="config-section">
+    <h3>Affichage – rotation</h3>
 
-        <div class="config-section">
-          <h3>Actions</h3>
-          <div class="config-row">
-            <button class="mini-btn" id="display-save-config" type="button">💾 Enregistrer</button>
-            <button class="mini-btn" id="display-open-page" type="button">🚀 Ouvrir Display</button>
-            <button class="mini-btn ghost" id="display-reset-config" type="button">🔄 Réinitialiser</button>
-          </div>
-        </div>
+    <div class="config-row">
+      <div class="config-label">Rotation écrans</div>
+      <div class="config-value">
+        <label>
+          <input type="checkbox" id="display-rotation-enabled"> Activée
+        </label>
       </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Durée écran (ms)</div>
+      <div class="config-value">
+        <input type="number" id="display-rotation-interval"
+               min="5000" step="1000" value="60000">
+      </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Écrans dans rotation</div>
+      <div class="config-value" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <label><input type="checkbox" class="rot-mode" value="show" checked> Émission</label>
+        <label><input type="checkbox" class="rot-mode" value="event"> Événement</label>
+        <label><input type="checkbox" class="rot-mode" value="nowplaying"> NowPlaying</label>
+        <label><input type="checkbox" class="rot-mode" value="schedule"> Programme</label>
+        <label><input type="checkbox" class="rot-mode" value="podcast"> Podcast</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PODCAST (DEMO RSS) ===================== -->
+  <div class="config-section">
+    <h3>Podcast (démo RSS)</h3>
+
+    <div class="config-row">
+      <div class="config-label">Activer écran podcast</div>
+      <div class="config-value">
+        <label><input type="checkbox" id="display-podcast-enabled" checked> Oui</label>
+      </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">URL RSS</div>
+      <div class="config-value">
+        <input type="text" id="display-podcast-url"
+               value="https://radiofrance-podcast.net/podcast09/podcast_01bcfbf6-efda-44c7-88f4-300aafef9039.xml"
+               style="width:100%">
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== BUMPER LOGO ===================== -->
+  <div class="config-section">
+    <h3>Bumper logo</h3>
+
+    <div class="config-row">
+      <div class="config-label">Activer bumper</div>
+      <div class="config-value">
+        <label><input type="checkbox" id="display-bumper-enabled" checked> Oui</label>
+      </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">Durée bumper (ms)</div>
+      <div class="config-value">
+        <input type="number" id="display-bumper-duration"
+               min="2000" step="500" value="6000">
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== EVENT CONFIG (IDENTIQUE À TON BLOC) ===================== -->
+  <div class="config-section" id="event-config" style="display: none;">
+    <h3>📅 Configuration Événement</h3>
+
+    <div class="config-hint" style="margin-bottom: 15px; background: rgba(0,120,212,0.1); padding: 12px; border-radius: 6px; border-left: 3px solid #0078d4;">
+      💡 <strong>Nouveau :</strong> Utilisez la
+      <a href="event-config.html" target="_blank" style="color: #4a9eff; text-decoration: underline;">
+        page dédiée
+      </a>
+      pour une interface simplifiée d'upload d'image
+    </div>
+
+    <div class="config-row">
+      <label class="config-label">Titre *</label>
+      <input id="display-event-title" class="np-sim-input" type="text"
+             placeholder="Ex: Concert de Noël 2025" style="flex: 1;" />
+    </div>
+
+    <div class="config-row">
+      <label class="config-label">Sous-titre</label>
+      <input id="display-event-subtitle" class="np-sim-input" type="text"
+             placeholder="Ex: Samedi 21 décembre à 20h" style="flex: 1;" />
+    </div>
+
+    <div class="config-row">
+      <label class="config-label">Description</label>
+      <textarea id="display-event-details" class="np-sim-input" rows="3"
+                placeholder="Ex: Soirée musicale exceptionnelle avec l'orchestre symphonique..."
+                style="flex: 1; resize: vertical;"></textarea>
+    </div>
+
+    <div class="config-row" style="flex-direction: column; align-items: stretch;">
+      <label class="config-label" style="margin-bottom: 8px;">Image de l'événement</label>
+
+      <!-- Option 1: Upload fichier -->
+      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <input id="display-event-image-file" type="file" accept="image/*"
+               style="flex: 1; padding: 8px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; color: #fff;" />
+        <button class="mini-btn" id="display-event-upload" type="button">📤 Upload</button>
+      </div>
+
+      <!-- Option 2: URL -->
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span style="color: #888; font-size: 12px;">ou URL:</span>
+        <input id="display-event-image" class="np-sim-input" type="text"
+               placeholder="https://exemple.com/affiche.jpg" style="flex: 1;" />
+      </div>
+
+      <!-- Aperçu miniature -->
+      <div id="event-image-preview" style="margin-top: 10px; display: none;">
+        <img id="event-image-preview-img" src="" alt="Aperçu"
+             style="max-width: 200px; max-height: 200px; border-radius: 4px; border: 2px solid #444;" />
+        <button class="mini-btn ghost" id="display-event-clear-image" type="button"
+                style="margin-left: 10px;">❌ Supprimer</button>
+      </div>
+    </div>
+
+    <div class="config-row" style="gap: 10px;">
+      <button class="mini-btn" id="display-event-preview" type="button">👁️ Aperçu complet</button>
+      <button class="mini-btn" id="display-event-save-quick" type="button">💾 Enregistrer événement</button>
+    </div>
+
+    <div class="config-hint" style="margin-top: 10px;">
+      💡 L'image sera convertie en Base64 et stockée localement. Format recommandé: JPG/PNG, max 2 Mo.
+    </div>
+  </div>
+
+  <!-- ===================== SAVE UNIQUE ===================== -->
+  <div class="config-section">
+    <button id="display-save-btn" class="btn btn-primary" type="button">
+      Enregistrer Display
+    </button>
+    <div class="config-hint">
+      Les réglages prennent effet instantanément sur display.html.
+    </div>
+  </div>
+
+  <!-- ===================== ACTIONS ===================== -->
+  <div class="config-section">
+    <h3>Actions</h3>
+    <div class="config-row">
+      <button class="mini-btn" id="display-open-page" type="button">🚀 Ouvrir Display</button>
+      <button class="mini-btn ghost" id="display-reset-config" type="button">🔄 Réinitialiser</button>
+    </div>
+  </div>
+
+</div>
 
       <!-- TAB MONITORING -->
       <div class="config-content hidden" id="monitor-content">
@@ -385,14 +489,6 @@
     </div>
   </div>
 
-  <audio id="top-sound" preload="auto">
-    <source
-      src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAEQAAAB8fHx3d3dwcHBvb29sbGxra2tmZmZkZGRjY2Nra2tsbGxvb29wcHB3d3d8fHx5eXl7e3t5eXl3d3dvb29tbW1tbW1vb29zc3N3d3d7e3t/f3////9/f39/f3t7e3l5eXd3d3FxcW1tbWxsbG1tbXFxcXd3d3l5eXt7e39/f3////9/f3+AgIA="
-      type="audio/wav"
-    />
-  </audio>
-
-  <script src="js/radiofrance-api.js?v=20251121"></script>
-  <script src="js/tech.js?v=20251121"></script>
+<script src="js/tech.js?v=20251123"></script>
 </body>
 </html>

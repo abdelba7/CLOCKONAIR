@@ -26,12 +26,6 @@
         </div>
       </div>
 
-      <div class="header-center">
-        <div class="header-center-inner">
-          <!-- Chrono déplacé sous le header -->
-        </div>
-      </div>
-
       <div class="header-right">
         <button class="icon-button icon-standby" id="btn-home" type="button" aria-label="Retour accueil">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -50,8 +44,10 @@
       </button>
     </div>
 
-    <!-- CHRONO ON AIR (Moved) -->
-    <div class="onair-chrono-standalone" id="onair-chrono-header">00:00</div>
+    <!-- CHRONO ON AIR -->
+    <div class="onair-chrono-header-wrapper">
+      <div class="onair-chrono-standalone" id="onair-chrono-header">00:00</div>
+    </div>
 
     <!-- BLOC CENTRAL -->
     <main class="main-area">
@@ -72,6 +68,7 @@
               <div class="onair-label" id="onair-label"></div>
               <div class="np-phase-label" id="np-phase-label"></div>
               <div class="np-chrono-main" id="np-chrono-main">00:00</div>
+              <div class="np-outro-duration" id="np-outro-duration"></div>
             </div>
           </div>
         </div>
@@ -117,13 +114,6 @@
     </div>
   </div>
 
-  <audio id="top-sound" preload="auto">
-    <source
-      src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAEQAAAB8fHx3d3dwcHBvb29sbGxra2tmZmZkZGRjY2Nra2tsbGxvb29wcHB3d3d8fHx5eXl7e3t5eXl3d3dvb29tbW1tbW1vb29zc3N3d3d7e3t/f3////9/f39/f3t7e3l5eXd3d3FxcW1tbWxsbG1tbXFxcXd3d3l5eXt7e39/f3////9/f3+AgIA="
-      type="audio/wav"
-    />
-  </audio>
-
-  <script src="js/clock.js"></script>
+  <script src="js/clock.js?v=20251121e"></script>
 </body>
 </html>

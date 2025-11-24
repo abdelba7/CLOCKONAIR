@@ -1,0 +1,550 @@
+/**
+ * DISPLAY.JS - Logique d'affichage dynamique
+ * Gère les différents modes d'affichage (émission, événement, now playing, programme)
+ */
+
+(function() {
+  'use strict';
+
+  const mainContainer = document.getElementById('display-main');
+  
+  // Configuration par défaut (sera surchargée par localStorage)
+  let config = {
+    mode: 'show', // 'show', 'event', 'nowplaying', 'schedule'
+    stationId: RadioFranceAPI.STATIONS.ici_orleans,
+    refreshInterval: 30000, // 30 secondes
+    theme: 'dark',
+    eventImage: '',
+    eventTitle: '',
+    eventSubtitle: '',
+    eventDetails: '',
+    rotationEnabled: false,
+    rotationInterval: 60000, // 60 secondes
+    rotationModes: ['show', 'nowplaying', 'schedule'],
+    // Nouvelle option : rotation API/Événement
+    autoSwitchEventEnabled: true,
+    autoSwitchEventInterval: 20000, // 20 secondes par défaut
+    // Options logo animation
+    logoDuration: 5000, // 5 secondes par défaut
+    logoTagline: 'Votre radio locale'
+  };
+  
+  let currentDisplayMode = 'show'; // Mode actuellement affiché
+  let rotationTimer = null;
+  let autoSwitchTimer = null;
+
+  // Chargement de la config depuis localStorage
+  function loadConfig() {
+    const saved = localStorage.getItem('display_config');
+    if (saved) {
+      try {
+        config = { ...config, ...JSON.parse(saved) };
+      } catch (e) {
+        console.error('Erreur chargement config:', e);
+      }
+    }
+    
+    // Activer le mode démo si pas de token
+    if (!RadioFranceAPI.hasToken()) {
+      console.info('Mode démo activé (pas de token API Radio France)');
+      RadioFranceAPI.setDemoMode(true);
+    }
+    
+    // Appliquer le thème
+    document.body.className = `theme-${config.theme}`;
+  }
+
+  // Sauvegarde de la config
+  function saveConfig() {
+    localStorage.setItem('display_config', JSON.stringify(config));
+  }
+
+  // Mise à jour de la config depuis l'extérieur
+  window.updateDisplayConfig = function(newConfig) {
+    config = { ...config, ...newConfig };
+    saveConfig();
+    if (newConfig.theme) {
+      document.body.className = `theme-${newConfig.theme}`;
+    }
+    render();
+  };
+
+  // ============== RENDU MODE: ÉMISSION ==============
+  
+  async function renderShowMode() {
+    const show = await RadioFranceAPI.getCurrentShow(config.stationId);
+    
+    if (!show) {
+      mainContainer.innerHTML = `
+        <div class="mode-show">
+          <div class="show-info">
+            <div class="show-title">Aucune émission en cours</div>
+            <div class="show-description">Les données ne sont pas disponibles pour le moment.</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const hosts = show.personalitiesConnection?.edges
+      ?.map(edge => edge.node.name)
+      .join(', ') || '';
+    
+    const visualSrc = show.visual?.src || show.show?.visual?.src || '';
+    const startTime = show.published_date_timestamp;
+    const endTime = show.end_date_timestamp;
+    const progress = RadioFranceAPI.getShowProgress(startTime, endTime);
+
+    mainContainer.innerHTML = `
+      <div class="mode-show">
+        <div class="show-visual-container">
+          <img class="show-visual" src="${visualSrc}" alt="${show.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 400%22%3E%3Crect fill=%22%23102467%22 width=%22400%22 height=%22400%22/%3E%3C/svg%3E'" />
+          <div class="show-visual-overlay"></div>
+        </div>
+        
+        <div class="show-info">
+          <div class="show-category">En direct</div>
+          <h1 class="show-title">${show.title || show.show?.title || 'Émission'}</h1>
+          ${hosts ? `<div class="show-host">avec ${hosts}</div>` : ''}
+          ${show.standFirst ? `<div class="show-description">${show.standFirst}</div>` : ''}
+          
+          <div class="show-time-info">
+            <div class="show-time">
+              ${RadioFranceAPI.formatTime(startTime)} - ${RadioFranceAPI.formatTime(endTime)}
+            </div>
+            <div class="show-progress">
+              <div class="show-progress-bar" style="width: ${progress}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============== RENDU MODE: LOGO ANIMATION ==============
+  
+  function renderLogoMode() {
+    const tagline = config.logoTagline || 'Votre radio locale';
+    
+    mainContainer.innerHTML = `
+      <div class="mode-logo">
+        <div class="logo-animation-circles">
+          <div class="logo-circle"></div>
+          <div class="logo-circle"></div>
+          <div class="logo-circle"></div>
+        </div>
+        <div class="logo-animation-container">
+          <svg class="logo-animation-svg" viewBox="0 0 309.29999 186.59412" xmlns="http://www.w3.org/2000/svg">
+            <style>
+              .s0 { fill: var(--display-text-primary); }
+              .s1 { fill: #0064f5; }
+              .s2 { fill: #001ed2; }
+            </style>
+            <path id="Orléans" fill-rule="evenodd" class="s0" d="m 126.2,180.89411 q -5.5,-5.7 -5.5,-14.1 0,-8.3 5.5,-14 5.5,-5.7 13.7,-5.7 8.1,0 13.6,5.7 5.5,5.7 5.5,14 0,8.4 -5.5,14.1 -5.5,5.6 -13.6,5.6 -8.2,0 -13.7,-5.6 z m 0,-14.1 q 0,6.3 3.9,10.4 3.9,4.1 9.8,4.1 5.8,0 9.7,-4.1 4,-4.1 4,-10.4 0,-6.1 -4,-10.3 -3.9,-4.2 -9.7,-4.2 -5.9,0 -9.8,4.2 -3.9,4.2 -3.9,10.3 z m 53.6,-6.7 v 4.9 q -0.9,-0.2 -1.8,-0.2 -2.3,0 -4.3,1.2 -2,1.1 -3.2,3.1 v 16.9 h -5.2 v -25.7 h 5 v 3 q 1.1,-1.3 3.1,-2.3 2,-1 4.6,-1 1,0 1.8,0.1 z m 10.2,25.9 h -5.2 v -38.9 h 5.2 z m 31.2,-11.7 h -19.9 q 0.3,3.3 2.5,5.5 2.2,2.1 5.5,2.1 4.3,0 7.8,-3.3 l 3,3.2 q -4.2,4.8 -11,4.8 -5.6,0 -9.2,-3.8 -3.6,-3.8 -3.6,-9.6 0,-5.8 3.6,-9.6 3.5,-3.8 9.1,-3.8 5.3,0 8.8,3.8 3.4,3.8 3.4,9.6 0,0.6 0,1.1 z m -12.2,-10 q -2.5,0 -4.5,1.6 -2.1,1.5 -2.7,4 h 14 q -0.5,-2.4 -2.5,-4 -1.9,-1.6 -4.3,-1.6 z m 6.3,-16.3 -5.7,8.2 H 206 l 3.6,-8.2 z m 35.9,38 h -5.1 v -2.3 q -3.2,2.9 -7.9,2.9 -3.6,0 -6.5,-1.7 -3,-1.8 -4.8,-4.8 -1.7,-3.2 -1.7,-6.9 0,-3.8 1.8,-6.9 1.8,-3.2 4.8,-4.9 2.8,-1.6 6.3,-1.6 4.6,0 8,2.9 v -2.4 h 5.1 z m -5.2,-8 v -9.7 q -2.8,-3.7 -7.4,-3.7 -3.6,0 -5.9,2.6 -2.3,2.4 -2.3,5.9 0,3.5 2.4,6.1 2.4,2.4 6.1,2.4 4.3,0 7.1,-3.6 z m 13.3,-17.7 h 5.1 v 2.4 q 3.1,-3 7.7,-3 5.8,0 9.4,4.6 2.5,3.1 2.5,9.1 v 12.6 h -5.2 v -12.9 q 0,-4 -1.6,-5.9 -1.9,-2.6 -5.3,-2.6 -4.4,0 -7.4,3.7 v 17.7 h -5.2 z m 50,18.5 q 0,3.5 -2.8,5.6 -2.9,2.2 -6.8,2.2 -6,0 -10.4,-3.6 l 2.7,-3.5 q 3.6,2.5 7.6,2.5 1.8,0 3.1,-0.8 1.4,-1 1.4,-2.4 0,-1.4 -1.5,-2.2 -1.4,-0.8 -3.4,-1.3 -2,-0.5 -4.1,-1.2 -2,-0.7 -3.5,-2.4 -1.4,-1.6 -1.4,-4.2 0,-3.8 2.8,-5.7 2.8,-2 6.7,-2 4.9,0 8.5,2.8 l -2.5,3.6 q -2.7,-1.9 -5.7,-1.9 -2,0 -3.3,0.9 -1.3,0.8 -1.3,2.3 0,1.2 1.4,2 1.5,0.7 3.5,1.3 2.1,0.4 4.1,1.2 2,0.8 3.4,2.5 1.5,1.7 1.5,4.3 z"/>
+            <g id="ici" transform="translate(0,-0.7)">
+              <path fill-rule="evenodd" class="s0" d="M 170.1,0.7 V 24.5 H 143.9 V 0.7 Z m 22.5,115.2 c -8.7,-8.7 -13,-20.5 -13,-35.5 0,-14.8 4.5,-26.6 13.4,-35.4 8.9,-8.9 20.8,-13.3 35.9,-13.3 12.6,0 23,3.2 30.9,9.8 7.9,6.5 12.7,15.4 14.6,26.9 H 247.3 C 245.1,58.7 238.5,53 228.5,53 c -6.7,0 -12.2,2.6 -16.2,7.6 -4,5.1 -6.1,11.7 -6.1,19.8 0,8.1 2.1,14.8 6.1,19.8 q 1.4,1.8 3.3,3.2 1.8,1.5 3.9,2.5 2.1,1 4.4,1.4 2.3,0.5 4.6,0.5 c 10.1,0 17,-6 18.8,-15.7 h 27.3 c -1.9,11.4 -6.9,20.4 -15,27 -8.3,6.6 -18.8,9.9 -31.6,9.9 -15.1,0 -26.9,-4.3 -35.4,-13.1 z M 143.9,32.8 h 26.2 v 95.1 h -26.2 z m 139.2,0 h 26.2 v 95.1 H 283.1 Z M 309.2,0.7 V 24.5 H 283 V 0.7 Z"/>
+              <path class="s1" d="M 64,129.4 C 28.6,129.4 0,100.7 0,65.1 0,29.6 28.6,0.9 64,0.9 c 35.4,0 64,28.7 64,64.2 0,35.6 -28.6,64.3 -64,64.3 z"/>
+              <path class="s0" d="m 64,65.1 v 64.3 H 0 V 65.1 Z"/>
+              <path fill-rule="evenodd" class="s2" d="M 63.9,129.4 H 64 V 65.1 H 0 c 0,35.5 28.6,64.2 63.9,64.3 z"/>
+            </g>
+          </svg>
+          <div class="logo-tagline">${tagline}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============== RENDU MODE: ÉVÉNEMENT ==============
+  
+  function renderEventMode() {
+    const img = config.eventImage 
+      ? `<img class="event-image" src="${config.eventImage}" alt="${config.eventTitle}" />`
+      : '';
+
+    mainContainer.innerHTML = `
+      <div class="mode-event">
+        <div class="event-card">
+          ${img}
+          <h1 class="event-title">${config.eventTitle || 'Événement à venir'}</h1>
+          ${config.eventSubtitle ? `<div class="event-subtitle">${config.eventSubtitle}</div>` : ''}
+          ${config.eventDetails ? `<div class="event-details">${config.eventDetails}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // ============== RENDU MODE: NOW PLAYING ==============
+  
+  async function renderNowPlayingMode() {
+    // Pour l'instant, affichage basique en attendant les métadonnées du stream
+    // Idéalement, on récupérerait les infos depuis le backend ou stream metadata
+    
+    mainContainer.innerHTML = `
+      <div class="mode-nowplaying">
+        <div class="np-cover-wrapper">
+          <img class="np-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect fill='%23102467' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23fff' font-size='60' font-family='system-ui'%3E🎵%3C/text%3E%3C/svg%3E" alt="Now Playing" />
+          <div class="np-vinyl-effect"></div>
+        </div>
+        
+        <div class="np-info">
+          <div class="np-track-title">En écoute sur ici Orléans</div>
+          <div class="np-track-artist">Suivez-nous en direct</div>
+          <div class="np-track-album">Musique, info et divertissement</div>
+        </div>
+      </div>
+    `;
+
+    // TODO: Intégrer avec votre backend clock-onair pour récupérer le Now Playing réel
+    // Exemple d'intégration:
+    /*
+    try {
+      const npResponse = await fetch('/api/nowplaying');
+      const npData = await npResponse.json();
+      if (npData.ok && npData.nowPlaying) {
+        const np = npData.nowPlaying;
+        // Mettre à jour l'affichage avec les vraies données
+        document.querySelector('.np-track-title').textContent = np.title || 'Titre inconnu';
+        document.querySelector('.np-track-artist').textContent = np.artist || 'Artiste inconnu';
+        if (np.album) {
+          document.querySelector('.np-track-album').textContent = np.album;
+        }
+      }
+    } catch (e) {
+      console.error('Erreur récupération Now Playing:', e);
+    }
+    */
+  }
+
+  // ============== RENDU MODE: PROGRAMME ==============
+  
+  async function renderScheduleMode() {
+    const schedule = await RadioFranceAPI.getUpcomingShows(config.stationId, 5);
+    
+    if (!schedule || schedule.length === 0) {
+      mainContainer.innerHTML = `
+        <div class="mode-schedule">
+          <div class="schedule-header">
+            <h1 class="schedule-title">Programme du jour</h1>
+          </div>
+          <div class="schedule-list">
+            <div class="schedule-item">
+              <div class="schedule-content">
+                <div class="schedule-show-title">Aucune émission programmée</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const now = Date.now() / 1000;
+    const today = new Date().toLocaleDateString('fr-FR', { 
+      weekday: 'long', 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+
+    const scheduleHTML = schedule.map(show => {
+      const startTime = show.published_date_timestamp;
+      const endTime = show.end_date_timestamp;
+      const duration = Math.round((endTime - startTime) / 60);
+      const isCurrent = startTime <= now && now <= endTime;
+      const hosts = show.personalitiesConnection?.edges
+        ?.map(edge => edge.node.name)
+        .join(', ') || '';
+
+      return `
+        <div class="schedule-item ${isCurrent ? 'current' : ''}">
+          <div class="schedule-time-block">
+            <div class="schedule-time">${RadioFranceAPI.formatTime(startTime)}</div>
+            <div class="schedule-duration">${duration} min</div>
+          </div>
+          <div class="schedule-content">
+            <div class="schedule-show-title">${show.title || show.show?.title || 'Émission'}</div>
+            ${hosts ? `<div class="schedule-show-host">${hosts}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    mainContainer.innerHTML = `
+      <div class="mode-schedule">
+        <div class="schedule-header">
+          <h1 class="schedule-title">Programme du jour</h1>
+          <div class="schedule-date">${today}</div>
+        </div>
+        <div class="schedule-list">
+          ${scheduleHTML}
+        </div>
+      </div>
+    `;
+  }
+
+  // ============== RENDU PRINCIPAL ==============
+  
+  async function render() {
+    mainContainer.style.opacity = '0';
+    
+    setTimeout(async () => {
+      // Utiliser currentDisplayMode pour la bascule auto, sinon config.mode
+      const modeToRender = config.autoSwitchEventEnabled && hasEventConfigured() 
+        ? currentDisplayMode 
+        : config.mode;
+      
+      switch (modeToRender) {
+        case 'show':
+          await renderShowMode();
+          break;
+        case 'logo':
+          renderLogoMode();
+          break;
+        case 'event':
+          renderEventMode();
+          break;
+        case 'nowplaying':
+          await renderNowPlayingMode();
+          break;
+        case 'schedule':
+          await renderScheduleMode();
+          break;
+        default:
+          await renderShowMode();
+      }
+      
+      setTimeout(() => {
+        mainContainer.style.opacity = '1';
+      }, 50);
+    }, 300);
+  }
+
+  // ============== ROTATION AUTOMATIQUE ==============
+  
+  let rotationIndex = 0;
+
+  function startRotation() {
+    if (!config.rotationEnabled || config.rotationModes.length === 0) {
+      return;
+    }
+
+    stopRotation();
+    
+    rotationTimer = setInterval(() => {
+      rotationIndex = (rotationIndex + 1) % config.rotationModes.length;
+      config.mode = config.rotationModes[rotationIndex];
+      render();
+    }, config.rotationInterval);
+  }
+
+  function stopRotation() {
+    if (rotationTimer) {
+      clearInterval(rotationTimer);
+      rotationTimer = null;
+    }
+  }
+
+  // ============== BASCULE AUTO API / ÉVÉNEMENT ==============
+  
+  function hasEventConfigured() {
+    return !!(config.eventTitle && config.eventTitle.trim());
+  }
+  
+  function startAutoSwitch() {
+    stopAutoSwitch();
+    
+    if (!config.autoSwitchEventEnabled) {
+      console.log('[Display] Bascule auto événement désactivée dans config');
+      return;
+    }
+    
+    const logoDuration = config.logoDuration || 5000;
+    const hasEvent = hasEventConfigured();
+    
+    if (hasEvent) {
+      console.log('[Display] Bascule auto activée : API → LOGO (' + (logoDuration/1000) + 's) → Événement toutes les', config.autoSwitchEventInterval / 1000, 'secondes');
+    } else {
+      console.log('[Display] Bascule auto activée : API → LOGO (' + (logoDuration/1000) + 's) → API (pas d\'événement configuré)');
+    }
+    
+    // Démarrer avec l'API
+    currentDisplayMode = 'show';
+    let switchCount = 0;
+    
+    autoSwitchTimer = setInterval(() => {
+      switchCount++;
+      
+      if (hasEvent) {
+        // Cycle complet : show → logo → event → show
+        if (switchCount % 3 === 1) {
+          // Après show, afficher le logo pendant la durée configurée
+          currentDisplayMode = 'logo';
+          console.log('[Display] → Basculement vers LOGO (' + (logoDuration/1000) + 's)');
+          
+          // Programmer le passage à event après la durée configurée
+          setTimeout(() => {
+            if (currentDisplayMode === 'logo') {
+              currentDisplayMode = 'event';
+              console.log('[Display] → Basculement vers ÉVÉNEMENT');
+              render();
+            }
+          }, logoDuration);
+          
+        } else if (switchCount % 3 === 2) {
+          // Le logo affiche déjà l'événement (programmé ci-dessus)
+          // Ne rien faire ici
+          return;
+          
+        } else {
+          // Retour à l'API
+          currentDisplayMode = 'show';
+          console.log('[Display] → Basculement vers API RADIO FRANCE');
+        }
+      } else {
+        // Cycle simple : show → logo → show (sans événement)
+        if (switchCount % 2 === 1) {
+          // Alterner entre show et logo
+          currentDisplayMode = 'logo';
+          console.log('[Display] → Basculement vers LOGO (' + (logoDuration/1000) + 's)');
+          
+          // Retour automatique à show après la durée du logo
+          setTimeout(() => {
+            if (currentDisplayMode === 'logo') {
+              currentDisplayMode = 'show';
+              console.log('[Display] → Basculement vers API RADIO FRANCE');
+              render();
+            }
+          }, logoDuration);
+        }
+        // switchCount pair : déjà géré par le setTimeout ci-dessus
+        else {
+          return;
+        }
+      }
+      
+      render();
+    }, config.autoSwitchEventInterval);
+  }
+  
+  function stopAutoSwitch() {
+    if (autoSwitchTimer) {
+      clearInterval(autoSwitchTimer);
+      autoSwitchTimer = null;
+    }
+  }
+
+  // ============== RAFRAÎCHISSEMENT AUTO ==============
+  
+  let refreshTimer = null;
+
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    
+    refreshTimer = setInterval(() => {
+      // Rafraîchir uniquement si on est en mode API
+      if (currentDisplayMode === 'show') {
+        render();
+      }
+    }, config.refreshInterval);
+  }
+
+  function stopAutoRefresh() {
+    if (refreshTimer) {
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
+  }
+
+  // ============== INITIALISATION ==============
+  
+  function init() {
+    loadConfig();
+    render();
+    startAutoRefresh();
+    
+    // Priorité : bascule auto si activée (fonctionne avec ou sans événement)
+    if (config.autoSwitchEventEnabled) {
+      if (hasEventConfigured()) {
+        console.log('[Display] Mode bascule auto API → Logo → Événement activé');
+      } else {
+        console.log('[Display] Mode bascule auto API → Logo activé (sans événement)');
+      }
+      startAutoSwitch();
+    } else if (config.rotationEnabled) {
+      console.log('[Display] Mode rotation multi-modes activé');
+      startRotation();
+    }
+
+    // Message de console pour debug
+    console.log('[Display] Initialisé en mode:', config.mode);
+    console.log('[Display] Événement configuré:', hasEventConfigured() ? 'Oui' : 'Non');
+    console.log('[Display] Bascule auto événement:', config.autoSwitchEventEnabled ? 'Activée' : 'Désactivée');
+    console.log('[Display] Logo duration:', (config.logoDuration || 5000) / 1000, 'secondes');
+    console.log('[Display] Logo tagline:', config.logoTagline || 'Votre radio locale');
+    console.log('[Display] Token API Radio France:', RadioFranceAPI.hasToken() ? 'Configuré' : 'Non configuré');
+    
+    if (!RadioFranceAPI.hasToken()) {
+      console.warn('[Display] ⚠️  Token API Radio France manquant. Configurez-le via: RadioFranceAPI.setToken("votre-token")');
+    }
+    
+    // Écouter les changements de config depuis index-display.html
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('display_config_channel');
+        bc.onmessage = (event) => {
+          if (event.data.type === 'config_updated') {
+            console.log('[Display] 🔄 Configuration mise à jour depuis index-display.html');
+            
+            // Arrêter les timers actuels
+            stopAutoSwitch();
+            stopRotation();
+            stopAutoRefresh();
+            
+            // Recharger la config
+            loadConfig();
+            
+            // Redémarrer avec la nouvelle config
+            render();
+            startAutoRefresh();
+            
+            if (config.autoSwitchEventEnabled) {
+              startAutoSwitch();
+            } else if (config.rotationEnabled) {
+              startRotation();
+            }
+            
+            console.log('[Display] ✅ Configuration rechargée avec succès');
+          }
+        };
+      }
+    } catch (e) {
+      console.log('[Display] BroadcastChannel non disponible');
+    }
+  }
+
+  // Démarrage
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Export pour accès externe
+  window.DisplayController = {
+    render,
+    setMode: (mode) => {
+      config.mode = mode;
+      saveConfig();
+      render();
+    },
+    getConfig: () => ({ ...config }),
+    startRotation,
+    stopRotation,
+    startAutoRefresh,
+    stopAutoRefresh,
+    startAutoSwitch,
+    stopAutoSwitch,
+    hasEventConfigured
+  };
+
+})();

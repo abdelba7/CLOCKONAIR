@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Logo Simple</title>
+  <link rel="stylesheet" href="css/display.css">
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    .debug {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,0,0,0.8);
+      padding: 10px;
+      z-index: 9999;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <div class="debug">
+    <strong>DEBUG:</strong><br>
+    Page chargée: <span id="loaded">❌</span><br>
+    CSS chargée: <span id="css">❌</span><br>
+    <button onclick="testLogo()">Test Logo</button>
+  </div>
+
+  <div class="display-container">
+    <main class="display-main" id="display-main">
+      <h1>En attente...</h1>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('loaded').textContent = '✅';
+    
+    // Vérifier si le CSS est chargé
+    const testEl = document.createElement('div');
+    testEl.className = 'mode-logo';
+    testEl.style.display = 'none';
+    document.body.appendChild(testEl);
+    const styles = window.getComputedStyle(testEl);
+    if (styles.display !== 'none' || styles.position === 'relative') {
+      document.getElementById('css').textContent = '✅';
+    }
+
+    function testLogo() {
+      const main = document.getElementById('display-main');
+      main.innerHTML = `
+        <div class="mode-logo">
+          <div class="logo-animation-circles">
+            <div class="logo-circle"></div>
+            <div class="logo-circle"></div>
+            <div class="logo-circle"></div>
+          </div>
+          <div class="logo-animation-container">
+            <svg class="logo-animation-svg" viewBox="0 0 309.29999 186.59412" xmlns="http://www.w3.org/2000/svg">
+              <style>
+                .s0 { fill: var(--display-text-primary); }
+                .s1 { fill: #0064f5; }
+                .s2 { fill: #001ed2; }
+              </style>
+              <g id="ici">
+                <path class="s1" d="M 64,129.4 C 28.6,129.4 0,100.7 0,65.1 0,29.6 28.6,0.9 64,0.9 c 35.4,0 64,28.7 64,64.2 0,35.6 -28.6,64.3 -64,64.3 z"/>
+                <path class="s0" d="m 64,65.1 v 64.3 H 0 V 65.1 Z"/>
+                <path class="s2" d="M 63.9,129.4 H 64 V 65.1 H 0 c 0,35.5 28.6,64.2 63.9,64.3 z"/>
+              </g>
+            </svg>
+            <div class="logo-tagline">TEST LOGO</div>
+          </div>
+        </div>
+      `;
+      console.log('Logo injecté dans le DOM');
+    }
+
+    // Auto-test après 1 seconde
+    setTimeout(testLogo, 1000);
+  </script>
+</body>
+</html>

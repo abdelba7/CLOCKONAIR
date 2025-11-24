@@ -31,7 +31,8 @@
 
 body {
   margin: 0;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
   overflow: hidden;
   font-family: var(--font-main);
   display: flex;
@@ -44,12 +45,6 @@ body {
   background-repeat: no-repeat;
   color: #fff;
   transition: background 180ms ease-out, background-image 180ms ease-out, color 180ms ease-out;
-}
-
-@supports (-webkit-touch-callout: none) {
-  body {
-    height: -webkit-fill-available;
-  }
 }
 
 body.theme-dark {
@@ -88,6 +83,7 @@ body.status-top     { background-image: var(--bg-top); }
   position: relative;
   flex: 1;
   max-width: 1400px;
+  max-height: -webkit-fill-available;
   padding: 8px 12px 8px;
   margin: 4px;
   box-sizing: border-box;
@@ -429,7 +425,7 @@ body.theme-light .clock-background-circle {
   font-size: clamp(3.2rem, 4.8vw, 4.4rem);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
-  margin-bottom: -8px;
+  margin-bottom: 0;
   color: var(--text-primary);
   text-align: center;
 }
@@ -440,7 +436,7 @@ body.theme-light .clock-background-circle {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--danger);
-  margin-bottom: -6px;
+  margin-bottom: 0;
 }
 
 .np-phase-label {
@@ -449,7 +445,6 @@ body.theme-light .clock-background-circle {
   letter-spacing: 0.14em;
   color: var(--np-orange);
   min-height: 1em;
-  margin-bottom: -6px;
 }
 
 .np-chrono-main {
@@ -461,27 +456,6 @@ body.theme-light .clock-background-circle {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
-}
-
-.np-outro-duration {
-  font-size: 0.85rem;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  min-height: 1em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: -4px;
-}
-
-.np-outro-duration .label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  opacity: 0.7;
 }
 
 .now-playing {
@@ -886,14 +860,8 @@ body.theme-light .icon-button {
 }
 
 body.theme-light .icon-button svg path,
-body.theme-light .icon-button svg polygon,
-body.theme-light .icon-button svg circle,
-body.theme-light .icon-button svg line {
+body.theme-light .icon-button svg polygon {
   stroke: var(--text-primary-light);
-}
-
-body.theme-light .icon-button svg path[fill],
-body.theme-light .icon-button svg polygon[fill] {
   fill: var(--text-primary-light);
 }
 
@@ -912,289 +880,6 @@ body.theme-light .config-row {
   border-bottom-color: rgba(0,0,0,0.08);
 }
 
-/* Arduino Device Monitoring */
-
-.arduino-device {
-  background: var(--surface-dark);
-  border: 1px solid var(--border-subtle-dark);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-  transition: all 200ms ease;
-}
-
-.arduino-device:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.15);
-}
-
-.device-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.device-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-primary-dark);
-}
-
-.device-status {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.device-status.online {
-  background: rgba(35, 213, 107, 0.2);
-  color: #23d56b;
-  border: 1px solid rgba(35, 213, 107, 0.4);
-}
-
-.device-status.offline {
-  background: rgba(255, 59, 48, 0.2);
-  color: #ff3b30;
-  border: 1px solid rgba(255, 59, 48, 0.4);
-}
-
-.device-pins {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
-  align-items: stretch;
-}
-
-.pin-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px;
-  background: rgba(0,0,0,0.3);
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.05);
-}
-
-.pin-label {
-  font-size: 0.7rem;
-  color: var(--text-muted-dark);
-  margin-bottom: 4px;
-  font-weight: 500;
-}
-
-.pin-value {
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-variant-numeric: tabular-nums;
-}
-
-.pin-value.active {
-  color: #23d56b;
-  background: rgba(35, 213, 107, 0.15);
-}
-
-.pin-value.inactive {
-  color: #9c9ca4;
-  background: rgba(156, 156, 164, 0.1);
-}
-
-.pin-value.unknown {
-  color: #ff9f0a;
-  background: rgba(255, 159, 10, 0.1);
-}
-
-.pin-value.ordres-active {
-  color: #ff9f0a;
-  background: rgba(255, 159, 10, 0.2);
-  font-weight: 800;
-}
-
-.pin-value.ordres-inactive {
-  color: #6c757d;
-  background: rgba(108, 117, 125, 0.1);
-}
-
-.ordres-item {
-  grid-column: span 1;
-  border: 1px solid rgba(255, 159, 10, 0.2);
-}
-
-.device-info {
-  font-size: 0.7rem;
-  color: var(--text-muted-dark);
-  margin-top: 6px;
-  font-family: monospace;
-}
-
-.arduino-item.offline {
-  background: var(--surface-dark);
-  border: 1px solid var(--border-subtle-dark);
-  border-radius: 6px;
-  padding: 12px;
-  text-align: center;
-  color: var(--text-muted-dark);
-  font-style: italic;
-}
-
-/* Light theme adaptations for devices */
-
-body.theme-light .arduino-device {
-  background: var(--surface-light);
-  border-color: var(--border-subtle-light);
-}
-
-body.theme-light .arduino-device:hover {
-  background: rgba(0,0,0,0.04);
-  border-color: rgba(0,0,0,0.2);
-}
-
-body.theme-light .device-name {
-  color: var(--text-primary-light);
-}
-
-body.theme-light .pin-item {
-  background: rgba(0,0,0,0.05);
-  border-color: rgba(0,0,0,0.08);
-}
-
-body.theme-light .pin-label {
-  color: var(--text-muted-light);
-}
-
-body.theme-light .device-info {
-  color: var(--text-muted-light);
-}
-
-body.theme-light .arduino-item.offline {
-  background: var(--surface-light);
-  border-color: var(--border-subtle-light);
-  color: var(--text-muted-light);
-}
-
 body.theme-light .config-label {
   color: var(--text-muted-light);
-}
-
-/* =============================================
-   ORDRES MODAL STYLES
-   ============================================= */
-
-.ordres-modal-body {
-  padding: 20px;
-}
-
-.ordres-instructions {
-  text-align: center;
-  margin-bottom: 20px;
-  color: var(--text-muted-dark);
-  font-size: 0.9rem;
-}
-
-.ordres-buttons-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.ordres-action-btn {
-  background: linear-gradient(135deg, rgba(255, 159, 10, 0.1), rgba(255, 159, 10, 0.05));
-  border: 2px solid rgba(255, 159, 10, 0.3);
-  border-radius: 12px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.ordres-action-btn:hover {
-  background: linear-gradient(135deg, rgba(255, 159, 10, 0.2), rgba(255, 159, 10, 0.1));
-  border-color: rgba(255, 159, 10, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 159, 10, 0.2);
-}
-
-.ordres-action-btn:active,
-.ordres-action-btn.active {
-  background: linear-gradient(135deg, rgba(255, 159, 10, 0.4), rgba(255, 159, 10, 0.3));
-  border-color: #ff9f0a;
-  transform: scale(0.98);
-  box-shadow: 0 4px 12px rgba(255, 159, 10, 0.4), inset 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.ordres-btn-label {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #ff9f0a;
-  letter-spacing: 0.5px;
-}
-
-.ordres-btn-desc {
-  font-size: 0.85rem;
-  color: var(--text-muted-dark);
-  text-align: center;
-}
-
-.ordres-btn-status {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-muted-dark);
-  margin-top: 4px;
-}
-
-.ordres-action-btn.active .ordres-btn-status {
-  background: rgba(255, 159, 10, 0.3);
-  color: #ff9f0a;
-}
-
-body.theme-light .ordres-instructions {
-  color: var(--text-muted-light);
-}
-
-body.theme-light .ordres-action-btn {
-  background: linear-gradient(135deg, rgba(255, 159, 10, 0.15), rgba(255, 159, 10, 0.08));
-  border-color: rgba(255, 159, 10, 0.4);
-}
-
-body.theme-light .ordres-action-btn:hover {
-  background: linear-gradient(135deg, rgba(255, 159, 10, 0.25), rgba(255, 159, 10, 0.15));
-  border-color: rgba(255, 159, 10, 0.6);
-}
-
-body.theme-light .ordres-action-btn:active,
-body.theme-light .ordres-action-btn.active {
-  background: linear-gradient(135deg, rgba(255, 159, 10, 0.5), rgba(255, 159, 10, 0.4));
-  border-color: #ff9f0a;
-}
-
-body.theme-light .ordres-btn-desc {
-  color: var(--text-muted-light);
-}
-
-body.theme-light .ordres-btn-status {
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--text-muted-light);
-}
-
-body.theme-light .ordres-action-btn.active .ordres-btn-status {
-  background: rgba(255, 159, 10, 0.4);
-  color: #d67e00;
 }

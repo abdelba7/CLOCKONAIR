@@ -3,15 +3,14 @@
  * - Logo bumper ENTRE chaque écran
  * - Rotation / autoSwitch passent par showBumperThen()
  * - Ticker + météo conservés
- * - FIX: reset animation bumper à chaque apparition (logo visible tout le temps)
  */
 
 (function(){
   "use strict";
 
   const mainContainer = document.getElementById("display-main");
+
   const bumperEl = document.getElementById("bumper-overlay");
-  const tickerFooter = document.getElementById("display-ticker");
 
   let config = {
     mode: "show",
@@ -33,17 +32,14 @@
 
     // ===== BUMPER =====
     bumperEnabled: true,
-    bumperDurationMs: 6000,
-    bumperMinGapMs: 300,
-
-    // Afficher le ticker pendant bumper
-    bumperShowTicker: true,
+    bumperDurationMs: 6000,  // <-- plus long
+    bumperMinGapMs: 300,     // petite respiration
 
     // ===== TICKER =====
     tickerEnabled: true,
-    tickerUrl: "/rss/infos.xml", // flux par défaut
+    tickerUrl: "/ticker.txt",
     tickerRefreshMs: 15000,
-    tickerSeparator: " ",        // on laisse l'espace, le SVG est déjà dans le HTML du ticker
+    tickerSeparator: " • ",
     tickerSpeedPxPerSec: 90,
 
     // ===== METEO =====
@@ -69,14 +65,7 @@
       try{ config = { ...config, ...JSON.parse(saved) }; }
       catch(e){ console.error("Config invalid:", e); }
     }
-
     document.body.className = `theme-${config.theme}`;
-
-    // ticker visible/caché pendant bumper
-    if (tickerFooter) {
-      tickerFooter.classList.toggle("hide-during-bumper", !config.bumperShowTicker);
-    }
-
     if(!RadioFranceAPI.hasToken()){
       RadioFranceAPI.setDemoMode(true);
     }
@@ -90,11 +79,6 @@
     config = { ...config, ...newConfig };
     saveConfig();
     document.body.className = `theme-${config.theme}`;
-
-    if (tickerFooter) {
-      tickerFooter.classList.toggle("hide-during-bumper", !config.bumperShowTicker);
-    }
-
     restartTimers();
     render();
   };
@@ -105,11 +89,6 @@
         const incoming = JSON.parse(e.newValue || "{}");
         config = { ...config, ...incoming };
         document.body.className = `theme-${config.theme}`;
-
-        if (tickerFooter) {
-          tickerFooter.classList.toggle("hide-during-bumper", !config.bumperShowTicker);
-        }
-
         restartTimers();
         render();
       }catch(_){}
@@ -117,38 +96,21 @@
   });
 
   // ================== BUMPER ==================
-  function resetBumperAnimation(){
-    if(!bumperEl) return;
-
-    // 1) remet l’état “hors show”
-    bumperEl.classList.remove("show");
-
-    // 2) force reflow pour réinitialiser toutes les animations CSS
-    void bumperEl.offsetWidth;
-
-    // 3) remet show juste après => animations repartent
-    bumperEl.classList.add("show");
-  }
-
   function showBumperThen(nextMode){
     // évite bumper si désactivé ou si déjà en cours
     if(!config.bumperEnabled || inBumper || Date.now() < bumperCooldown){
       config.mode = nextMode;
-      currentDisplayMode = nextMode;
       return render();
     }
 
     inBumper = true;
-
-    // reset animation + show
-    resetBumperAnimation();
+    bumperEl?.classList.add("show");
 
     // la CSS utilise --bumper-exit-delay pour caler les sorties
-    bumperEl?.style.setProperty("--bumper-exit-delay", (config.bumperDurationMs/1000 - 0.8) + "s");
+    bumperEl?.style.setProperty("--bumper-exit-delay", (config.bumperDurationMs/1000 - 0.6) + "s");
 
     setTimeout(()=>{
       bumperEl?.classList.remove("show");
-
       setTimeout(()=>{
         config.mode = nextMode;
         currentDisplayMode = nextMode;
@@ -156,7 +118,7 @@
 
         inBumper = false;
         bumperCooldown = Date.now() + config.bumperMinGapMs;
-      }, 280);
+      }, 260);
     }, config.bumperDurationMs);
   }
 
@@ -356,28 +318,12 @@
     if(tickerTimeEl) tickerTimeEl.textContent=formatClockHHMM();
   }
 
-  function stripTags(html){
-    return html.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
-  }
-
   function normalizeTicker(raw){
-  // si c'est du RSS/XML → extraire les <title> d'items
-  if(raw.includes("<rss") || raw.includes("<channel")){
-    const titles = Array.from(raw.matchAll(/<item[\s\S]*?<title>([\s\S]*?)<\/title>/gi))
-      .map(m => stripTags(m[1]))
-      .filter(Boolean)
-      .slice(0, 8); // limite
-    if(titles.length) return titles.join(config.tickerSeparator);
+    const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    if(!lines.length) return "Aucune information pour le moment";
+    const hhmm=formatClockHHMM();
+    return lines.map(l=>`${hhmm} ${l}`).join(config.tickerSeparator);
   }
-
-  // fallback texte ligne par ligne
-  const lines = raw.split(/\r?\n/)
-    .map(l=>stripTags(l))
-    .filter(Boolean);
-
-  if(!lines.length) return "Aucune information pour le moment";
-  return lines.join(config.tickerSeparator);
-}
 
   function applyTickerText(text){
     if(!tickerTrackEl) return;
@@ -386,11 +332,11 @@
 
     const t1=document.createElement("div");
     t1.className="ticker-text";
-    t1.innerHTML=text; // <-- texte déjà avec logo svg côté HTML/serveur si besoin
+    t1.textContent=text;
 
     const t2=document.createElement("div");
     t2.className="ticker-text";
-    t2.innerHTML=text;
+    t2.textContent=text;
 
     tickerTrackEl.appendChild(t1);
     tickerTrackEl.appendChild(t2);
@@ -510,8 +456,8 @@
 
     // Premier bumper au chargement (si activé)
     if(config.bumperEnabled){
-      resetBumperAnimation();
-      bumperEl?.style.setProperty("--bumper-exit-delay", (config.bumperDurationMs/1000 - 0.8) + "s");
+      bumperEl?.classList.add("show");
+      bumperEl?.style.setProperty("--bumper-exit-delay", (config.bumperDurationMs/1000 - 0.6) + "s");
       setTimeout(()=> bumperEl?.classList.remove("show"), config.bumperDurationMs);
     }
 

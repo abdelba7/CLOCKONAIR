@@ -643,10 +643,9 @@
 
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname;
-      const port = window.location.port || (protocol === 'wss:' ? 443 : 80);
+      const host = window.location.host; // Inclut le port si présent
       
-      ws = new WebSocket(`${protocol}//${host}:3000/ws`);
+      ws = new WebSocket(`${protocol}//${host}/ws`);
 
       ws.onopen = () => {
         console.log('[Display] WebSocket connecté');

@@ -206,9 +206,9 @@
 
       try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.hostname;
+        const host = window.location.host; // Inclut le port si présent
         
-        ws = new WebSocket(`${protocol}//${host}:3000/ws`);
+        ws = new WebSocket(`${protocol}//${host}/ws`);
 
         ws.onopen = () => {
           wsStatusEl.textContent = '✅ Connecté';

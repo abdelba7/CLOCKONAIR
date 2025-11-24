@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test NowPlaying</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0f24;
+      color: #fff;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { margin-bottom: 20px; color: #0064f5; }
+    .status {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .status-item:last-child { border-bottom: none; }
+    .status-label { font-weight: 600; color: rgba(255,255,255,0.7); }
+    .status-value { font-weight: 700; color: #00d084; }
+    .status-value.error { color: #ff6b6b; }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 12px 24px;
+      background: #0064f5;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    button:hover { background: #0050cc; transform: translateY(-2px); }
+    button:active { transform: translateY(0); }
+    button.secondary { background: #444; }
+    button.secondary:hover { background: #555; }
+    .logs {
+      background: #000;
+      padding: 15px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #0f0;
+    }
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(0,255,0,0.1);
+    }
+    .log-time { color: #888; margin-right: 10px; }
+    .log-type { 
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+    .log-type.info { background: #0064f5; color: white; }
+    .log-type.success { background: #00d084; color: white; }
+    .log-type.error { background: #ff6b6b; color: white; }
+    .log-type.ws { background: #9b59b6; color: white; }
+    .preview {
+      background: rgba(255,255,255,0.03);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+    .preview h3 { margin-bottom: 15px; color: #0064f5; }
+    .data-json {
+      background: #000;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: #0f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Test NowPlaying - Backend API</h1>
+    
+    <div class="status">
+      <div class="status-item">
+        <span class="status-label">Backend HTTP:</span>
+        <span class="status-value" id="backend-status">⏳ Test...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">WebSocket:</span>
+        <span class="status-value" id="ws-status">❌ Déconnecté</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Dernière trame:</span>
+        <span class="status-value" id="last-received">Aucune</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Temps écoulé:</span>
+        <span class="status-value" id="elapsed-time">--</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Progression:</span>
+        <span class="status-value" id="progress-percent">--</span>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button onclick="testBackend()">🔄 Tester Backend</button>
+      <button onclick="connectWS()">🔌 Connecter WebSocket</button>
+      <button onclick="sendTestData()">📤 Envoyer Test NP</button>
+      <button onclick="clearLogs()" class="secondary">🗑️ Clear Logs</button>
+    </div>
+
+    <div class="preview">
+      <h3>📊 Dernières données reçues</h3>
+      <div class="data-json" id="data-preview">Aucune donnée</div>
+    </div>
+
+    <div class="preview">
+      <h3>📜 Logs en temps réel</h3>
+      <div class="logs" id="logs"></div>
+    </div>
+  </div>
+
+  <script>
+    let ws = null;
+    let lastNP = null;
+    let progressTimer = null;
+
+    function addLog(type, message) {
+      const logsEl = document.getElementById('logs');
+      const time = new Date().toLocaleTimeString('fr-FR');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-type ${type}">${type.toUpperCase()}</span>
+        <span>${message}</span>
+      `;
+      logsEl.insertBefore(entry, logsEl.firstChild);
+      
+      // Limiter à 50 logs
+      while (logsEl.children.length > 50) {
+        logsEl.removeChild(logsEl.lastChild);
+      }
+    }
+
+    async function testBackend() {
+      const statusEl = document.getElementById('backend-status');
+      statusEl.textContent = '⏳ Test...';
+      statusEl.className = 'status-value';
+      
+      try {
+        const res = await fetch('/api/nowplaying');
+        const json = await res.json();
+        
+        if (json.ok && json.nowPlaying) {
+          statusEl.textContent = '✅ OK';
+          statusEl.className = 'status-value';
+          lastNP = json.nowPlaying;
+          updateDataPreview(json.nowPlaying);
+          updateProgress();
+          startProgressTimer();
+          addLog('success', `Backend OK - Titre: ${json.nowPlaying.title || 'N/A'}`);
+        } else {
+          statusEl.textContent = '⚠️ Aucune donnée';
+          statusEl.className = 'status-value error';
+          addLog('error', 'Backend OK mais aucune donnée NowPlaying');
+          document.getElementById('data-preview').textContent = JSON.stringify(json, null, 2);
+        }
+      } catch (e) {
+        statusEl.textContent = '❌ Erreur';
+        statusEl.className = 'status-value error';
+        addLog('error', `Erreur backend: ${e.message}`);
+      }
+    }
+
+    function connectWS() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        addLog('info', 'WebSocket déjà connecté');
+        return;
+      }
+
+      const wsStatusEl = document.getElementById('ws-status');
+      wsStatusEl.textContent = '⏳ Connexion...';
+      wsStatusEl.className = 'status-value';
+
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.hostname;
+        
+        ws = new WebSocket(`${protocol}//${host}:3000/ws`);
+
+        ws.onopen = () => {
+          wsStatusEl.textContent = '✅ Connecté';
+          wsStatusEl.className = 'status-value';
+          addLog('ws', 'WebSocket connecté');
+          
+          // S'identifier en tant que monitoring
+          ws.send(JSON.stringify({ type: 'hello', role: 'monitoring', user: 'Test-NP' }));
+          addLog('ws', 'Hello envoyé (role: monitoring)');
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            addLog('ws', `Message reçu: ${data.type}`);
+            
+            if (data.type === 'nowPlaying' && data.nowPlaying) {
+              lastNP = data.nowPlaying;
+              updateDataPreview(data.nowPlaying);
+              updateProgress();
+              startProgressTimer();
+              document.getElementById('last-received').textContent = new Date().toLocaleTimeString('fr-FR');
+              addLog('success', `NowPlaying reçu: ${data.nowPlaying.title || 'N/A'}`);
+            }
+          } catch (e) {
+            addLog('error', `Erreur parse WS: ${e.message}`);
+          }
+        };
+
+        ws.onerror = (error) => {
+          wsStatusEl.textContent = '❌ Erreur';
+          wsStatusEl.className = 'status-value error';
+          addLog('error', 'WebSocket erreur');
+        };
+
+        ws.onclose = () => {
+          wsStatusEl.textContent = '❌ Déconnecté';
+          wsStatusEl.className = 'status-value error';
+          addLog('ws', 'WebSocket déconnecté');
+          ws = null;
+        };
+      } catch (e) {
+        wsStatusEl.textContent = '❌ Erreur';
+        wsStatusEl.className = 'status-value error';
+        addLog('error', `Impossible créer WebSocket: ${e.message}`);
+      }
+    }
+
+    async function sendTestData() {
+      const testData = {
+        title: "Test Track " + Date.now(),
+        artist: "Test Artist",
+        album: "Test Album",
+        durationMs: 180000, // 3 minutes
+        introMs: 5000,
+        outroMs: 10000,
+        remaining: 150 // 2m30s restant
+      };
+
+      try {
+        const res = await fetch('/api/nowplaying/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(testData)
+        });
+        
+        const json = await res.json();
+        addLog('success', `Test NP envoyé: ${testData.title}`);
+        
+        // Attendre un peu puis récupérer
+        setTimeout(testBackend, 500);
+      } catch (e) {
+        addLog('error', `Erreur envoi test: ${e.message}`);
+      }
+    }
+
+    function updateDataPreview(np) {
+      const previewEl = document.getElementById('data-preview');
+      previewEl.textContent = JSON.stringify(np, null, 2);
+    }
+
+    function formatSeconds(sec) {
+      if (!sec || sec < 0) return '0:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function updateProgress() {
+      if (!lastNP || !lastNP.receivedAt || !lastNP.durationMs) {
+        document.getElementById('elapsed-time').textContent = '--';
+        document.getElementById('progress-percent').textContent = '--';
+        return;
+      }
+
+      const startTime = new Date(lastNP.receivedAt).getTime();
+      const now = Date.now();
+      const elapsedMs = Math.max(0, now - startTime);
+      const remainingMs = Math.max(0, lastNP.durationMs - elapsedMs);
+      const percent = Math.min(100, (elapsedMs / lastNP.durationMs) * 100);
+
+      document.getElementById('elapsed-time').textContent = 
+        `${formatSeconds(elapsedMs / 1000)} / ${formatSeconds(lastNP.durationMs / 1000)}`;
+      document.getElementById('progress-percent').textContent = `${Math.round(percent)}%`;
+    }
+
+    function startProgressTimer() {
+      if (progressTimer) clearInterval(progressTimer);
+      progressTimer = setInterval(updateProgress, 1000);
+    }
+
+    function clearLogs() {
+      document.getElementById('logs').innerHTML = '';
+      addLog('info', 'Logs effacés');
+    }
+
+    // Auto-test au chargement
+    window.addEventListener('load', () => {
+      addLog('info', 'Page chargée - Prêt pour les tests');
+      testBackend();
+      setTimeout(connectWS, 1000);
+    });
+  </script>
+</body>
+</html>

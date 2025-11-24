@@ -161,12 +161,25 @@
     }
   }
 
+  // ---------- NOW PLAYING Backend ----------
+  async function getNowPlaying() {
+    try {
+      const res = await fetch('/api/nowplaying');
+      const json = await res.json();
+      return json.ok ? json.nowPlaying : null;
+    } catch (e) {
+      console.warn('[NowPlaying] Erreur fetch:', e);
+      return null;
+    }
+  }
+
   window.RadioFranceAPI = {
     STATIONS,
     setToken, getToken, hasToken,
     setDemoMode, clearCache,
     getCurrentShow, getUpcomingShows,
     getRandomPodcastFromRss,
+    getNowPlaying,
     getShowProgress, formatTime
   };
 })();

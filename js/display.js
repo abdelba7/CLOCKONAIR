@@ -216,16 +216,144 @@
       </div>`;
   }
 
-  async function renderNowPlayingMode(){
+  // ================== NOW PLAYING MODE (Backend temps réel) ==================
+  let npUpdateTimer = null;
+  let npCurrentData = null;
+
+  function stopNPUpdates() {
+    if (npUpdateTimer) {
+      clearInterval(npUpdateTimer);
+      npUpdateTimer = null;
+    }
+  }
+
+  function calculateNPProgress(receivedAt, durationMs) {
+    if (!receivedAt || !durationMs || durationMs <= 0) return { elapsed: 0, remaining: 0, percent: 0 };
+    
+    const startTime = new Date(receivedAt).getTime();
+    const now = Date.now();
+    const elapsedMs = Math.max(0, now - startTime);
+    const remainingMs = Math.max(0, durationMs - elapsedMs);
+    const percent = Math.min(100, (elapsedMs / durationMs) * 100);
+    
+    return {
+      elapsed: Math.floor(elapsedMs / 1000),
+      remaining: Math.floor(remainingMs / 1000),
+      percent: Math.round(percent)
+    };
+  }
+
+  function formatSeconds(sec) {
+    if (!sec || sec < 0) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function updateNPDisplay() {
+    if (!npCurrentData) return;
+    
+    const progress = calculateNPProgress(npCurrentData.receivedAt, npCurrentData.durationMs);
+    
+    // Mise à jour de la barre de progression
+    const progressBar = document.getElementById('np-progress-bar');
+    const elapsedEl = document.getElementById('np-elapsed');
+    const remainingEl = document.getElementById('np-remaining');
+    const percentEl = document.getElementById('np-percent');
+    
+    if (progressBar) progressBar.style.width = `${progress.percent}%`;
+    if (elapsedEl) elapsedEl.textContent = formatSeconds(progress.elapsed);
+    if (remainingEl) remainingEl.textContent = `-${formatSeconds(progress.remaining)}`;
+    if (percentEl) percentEl.textContent = `${progress.percent}%`;
+    
+    // Changement visuel quand intro/outro
+    const containerEl = document.querySelector('.mode-nowplaying');
+    if (containerEl && npCurrentData.introMs && progress.elapsed * 1000 < npCurrentData.introMs) {
+      containerEl.setAttribute('data-phase', 'intro');
+    } else if (containerEl && npCurrentData.outroMs && progress.remaining * 1000 < npCurrentData.outroMs) {
+      containerEl.setAttribute('data-phase', 'outro');
+    } else if (containerEl) {
+      containerEl.setAttribute('data-phase', 'main');
+    }
+  }
+
+  async function renderNowPlayingMode() {
+    stopNPUpdates();
+    
+    const np = await RadioFranceAPI.getNowPlaying();
+    
+    if (!np || !np.title) {
+      // Aucune donnée disponible
+      mainContainer.innerHTML = `
+        <div class="mode-nowplaying" data-state="empty" style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:40px;">
+          <div style="font-size:6rem;opacity:0.3;">🎵</div>
+          <div style="text-align:center;">
+            <div style="font-weight:900;font-size:2rem;color:#001ed2;margin-bottom:8px;">Now Playing</div>
+            <div style="font-weight:700;font-size:1.2rem;color:rgba(11,21,51,0.6);">En attente de trames...</div>
+            <div style="font-weight:600;font-size:0.9rem;color:rgba(11,21,51,0.4);margin-top:8px;">Backend: /api/nowplaying</div>
+          </div>
+        </div>`;
+      return;
+    }
+    
+    npCurrentData = np;
+    const progress = calculateNPProgress(np.receivedAt, np.durationMs);
+    const startDate = new Date(np.receivedAt);
+    
     mainContainer.innerHTML = `
-      <div class="mode-nowplaying" style="display:flex;gap:22px;align-items:center;">
-        <div style="width:min(36vw,460px);aspect-ratio:1/1;border-radius:18px;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 35px rgba(0,0,0,0.18);font-size:6rem;">🎵</div>
-        <div>
-          <div style="font-weight:800;color:#001ed2;letter-spacing:.12em;text-transform:uppercase;">En écoute</div>
-          <div style="font-size:clamp(2.2rem,3.4vw,3rem);font-weight:900;">ici Orléans</div>
-          <div style="font-size:1.4rem;font-weight:700;color:rgba(11,21,51,0.8);margin-top:6px;">Musique, info et bonne humeur</div>
+      <div class="mode-nowplaying" data-state="playing" data-phase="main" style="width:min(100%,1200px);">
+        <!-- Header station -->
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="font-weight:800;color:#001ed2;letter-spacing:.12em;text-transform:uppercase;font-size:0.95rem;">🎵 En Direct</div>
+          <div style="font-size:clamp(1.8rem,2.5vw,2.2rem);font-weight:900;margin-top:4px;">${np.station || 'ici Orléans'}</div>
+        </div>
+        
+        <!-- Artwork + Info -->
+        <div style="display:flex;gap:30px;align-items:center;margin-bottom:24px;flex-wrap:wrap;justify-content:center;">
+          <!-- Artwork -->
+          <div style="width:min(280px,40vw);aspect-ratio:1/1;border-radius:18px;background:linear-gradient(135deg,#0064f5,#001ed2);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 35px rgba(0,0,0,0.22);font-size:5rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 60%);"></div>
+            <div style="position:relative;z-index:1;">🎵</div>
+          </div>
+          
+          <!-- Info titre/artiste -->
+          <div style="flex:1;min-width:300px;">
+            <div style="font-weight:900;font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;margin-bottom:10px;color:#0b1533;">${np.title || 'Titre inconnu'}</div>
+            ${np.artist ? `<div style="font-weight:700;font-size:clamp(1.2rem,2vw,1.6rem);color:rgba(11,21,51,0.7);margin-bottom:8px;">${np.artist}</div>` : ''}
+            ${np.album ? `<div style="font-weight:600;font-size:1rem;color:rgba(11,21,51,0.5);">${np.album}</div>` : ''}
+            
+            <!-- Heure de démarrage -->
+            <div style="display:inline-block;margin-top:12px;padding:6px 12px;background:rgba(0,100,245,0.1);border-radius:8px;font-weight:700;font-size:0.85rem;color:#001ed2;">
+              🕐 Démarré à ${startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div style="margin-bottom:12px;">
+          <div style="height:8px;background:rgba(0,0,0,0.1);border-radius:4px;overflow:hidden;position:relative;">
+            <div id="np-progress-bar" style="height:100%;background:linear-gradient(90deg,#0064f5,#001ed2);width:${progress.percent}%;transition:width 0.3s ease;"></div>
+          </div>
+        </div>
+        
+        <!-- Timecodes -->
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:0.95rem;color:rgba(11,21,51,0.7);margin-bottom:20px;">
+          <span id="np-elapsed">${formatSeconds(progress.elapsed)}</span>
+          <span id="np-percent" style="color:#001ed2;">${progress.percent}%</span>
+          <span id="np-remaining">-${formatSeconds(progress.remaining)}</span>
+        </div>
+        
+        <!-- Métadonnées techniques (debug) -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:20px;opacity:0.7;">
+          ${np.durationMs ? `<div style="font-size:0.75rem;font-weight:600;color:rgba(11,21,51,0.6);">⏱️ Durée: ${formatSeconds(np.durationMs / 1000)}</div>` : ''}
+          ${np.introMs ? `<div style="font-size:0.75rem;font-weight:600;color:rgba(11,21,51,0.6);">▶️ Intro: ${formatSeconds(np.introMs / 1000)}</div>` : ''}
+          ${np.outroMs ? `<div style="font-size:0.75rem;font-weight:600;color:rgba(11,21,51,0.6);">⏹️ Outro: ${formatSeconds(np.outroMs / 1000)}</div>` : ''}
+          <div style="font-size:0.75rem;font-weight:600;color:rgba(11,21,51,0.6);">📡 Reçu: ${new Date(np.receivedAt).toLocaleTimeString('fr-FR')}</div>
         </div>
       </div>`;
+    
+    // Mise à jour toutes les secondes
+    npUpdateTimer = setInterval(updateNPDisplay, 1000);
   }
 
   async function renderScheduleMode(){
@@ -266,6 +394,7 @@
   }
 
   async function render(){
+    stopNPUpdates(); // Arrêt des timers NP si on change de mode
     mainContainer.style.opacity="0";
     setTimeout(async ()=>{
       const modeToRender = (config.autoSwitchEventEnabled && hasEventConfigured())
@@ -505,6 +634,75 @@
     stopWeather(); startWeather();
   }
 
+  // ================== WEBSOCKET pour mises à jour temps réel ==================
+  let ws = null;
+  let wsReconnectTimer = null;
+
+  function connectWebSocket() {
+    if (ws && ws.readyState === WebSocket.OPEN) return;
+
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.hostname;
+      const port = window.location.port || (protocol === 'wss:' ? 443 : 80);
+      
+      ws = new WebSocket(`${protocol}//${host}:3000/ws`);
+
+      ws.onopen = () => {
+        console.log('[Display] WebSocket connecté');
+        ws.send(JSON.stringify({ type: 'hello', role: 'monitoring', user: 'Display' }));
+        
+        // Clear reconnect timer si besoin
+        if (wsReconnectTimer) {
+          clearTimeout(wsReconnectTimer);
+          wsReconnectTimer = null;
+        }
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          // Mise à jour NOW PLAYING en temps réel
+          if (data.type === 'nowPlaying' && data.nowPlaying) {
+            console.log('[Display] Nouvelle trame NP reçue via WebSocket:', data.nowPlaying);
+            
+            // Si on est en mode nowplaying, rafraîchir immédiatement
+            const currentMode = (config.autoSwitchEventEnabled && hasEventConfigured())
+              ? currentDisplayMode
+              : config.mode;
+            
+            if (currentMode === 'nowplaying') {
+              npCurrentData = data.nowPlaying;
+              renderNowPlayingMode(); // Re-render avec nouvelles données
+            }
+          }
+        } catch (e) {
+          console.warn('[Display] Erreur parse WebSocket:', e);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.warn('[Display] WebSocket erreur:', error);
+      };
+
+      ws.onclose = () => {
+        console.log('[Display] WebSocket déconnecté, reconnexion dans 5s...');
+        ws = null;
+        
+        // Tentative de reconnexion
+        if (!wsReconnectTimer) {
+          wsReconnectTimer = setTimeout(() => {
+            wsReconnectTimer = null;
+            connectWebSocket();
+          }, 5000);
+        }
+      };
+    } catch (e) {
+      console.warn('[Display] Impossible de créer WebSocket:', e);
+    }
+  }
+
   function init(){
     loadConfig();
 
@@ -517,6 +715,9 @@
 
     render();
     restartTimers();
+    
+    // Connexion WebSocket pour mises à jour temps réel
+    connectWebSocket();
   }
 
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);

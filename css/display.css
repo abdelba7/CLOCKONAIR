@@ -285,6 +285,36 @@ body, html{
 }
 
 /* =========================
+   NOW PLAYING MODE
+========================= */
+.mode-nowplaying {
+  padding: 20px;
+  animation: fade-in 0.4s ease-out;
+}
+
+.mode-nowplaying[data-state="empty"] {
+  opacity: 0.6;
+}
+
+/* Phases intro/main/outro */
+.mode-nowplaying[data-phase="intro"] #np-progress-bar {
+  background: linear-gradient(90deg, #00d084, #00a368) !important;
+}
+
+.mode-nowplaying[data-phase="outro"] #np-progress-bar {
+  background: linear-gradient(90deg, #ff6b00, #d85400) !important;
+}
+
+.mode-nowplaying[data-phase="main"] #np-progress-bar {
+  background: linear-gradient(90deg, #0064f5, #001ed2);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================
    THEMES
 ========================= */
 body.theme-dark{
